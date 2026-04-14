@@ -62,10 +62,10 @@ ColumnLayout {
         Layout.fillWidth:   true
         implicitWidth:      _contentLayout.implicitWidth + (showBorder ? _margins * 2 : 0)
         implicitHeight:     _contentLayout.implicitHeight + (showBorder ? _margins * 2: 0)
-        color:              "transparent"
-        border.color:       outerBorderColor
+        color:              showBorder ? DJIStyle.surfaceColor : "transparent"
+        border.color:       showBorder ? DJIStyle.borderColor : outerBorderColor
         border.width:       showBorder ? 1 : 0
-        radius:             ScreenTools.defaultFontPixelHeight / 2
+        radius:             DJIStyle.cardRadius
 
         Repeater {
             model: showDividers ? _ySortedChildren.length : 0
@@ -75,7 +75,7 @@ ColumnLayout {
                 y:          _contentItem ? (_contentItem.y + _contentItem.height + _margins + (showBorder ? _margins : 0)) : 0
                 width:      parent.width - (showBorder ? _margins * 2 : 0)
                 height:     1
-                color:      QGroundControl.globalPalette.groupBorder
+                color:      DJIStyle.dividerColor
                 visible:    _contentItem ? _isContentItemVisible() : false
 
                 property var _contentItem: index < _ySortedChildren.length ? _ySortedChildren[index] : undefined

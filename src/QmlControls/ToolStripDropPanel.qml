@@ -125,8 +125,11 @@ Item {
                 context.lineTo(panelX, panelY)                              // top left
 
                 context.closePath()
-                context.fillStyle = qgcPal.windowShade
+                context.fillStyle = DJIStyle.cardBackground
                 context.fill()
+                context.strokeStyle = DJIStyle.borderColor
+                context.lineWidth = 1
+                context.stroke()
             }
         } // Canvas - arrowCanvas
 

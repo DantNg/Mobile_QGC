@@ -104,8 +104,10 @@ Item {
 
     Rectangle {
         anchors.fill:   parent
-        color:          _qgcPal.window
-        opacity:        0.5
+        color:          DJIStyle.overlayBackground
+        radius:         DJIStyle.cardRadius
+        border.width:   DJIStyle.hudBorderWidth
+        border.color:   DJIStyle.hudBorder
     }
 
     ColumnLayout {

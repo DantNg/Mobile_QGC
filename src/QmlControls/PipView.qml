@@ -90,11 +90,21 @@ Item {
         }
     }
 
-    Item {
-        id:             pipContent
+    Rectangle {
+        id:             pipBackground
         anchors.fill:   parent
         visible:        _isExpanded
+        color:          "transparent"
+        radius:         DJIStyle.cardRadius
+        border.width:   DJIStyle.hudBorderWidth
+        border.color:   DJIStyle.hudBorder
         clip:           true
+
+        Item {
+            id:             pipContent
+            anchors.fill:   parent
+            anchors.margins: pipBackground.border.width
+        }
     }
 
     MouseArea {
@@ -211,9 +221,11 @@ Item {
         anchors.bottom:         parent.bottom
         height:                 ScreenTools.defaultFontPixelHeight * 2
         width:                  ScreenTools.defaultFontPixelHeight * 2
-        radius:                 ScreenTools.defaultFontPixelHeight / 3
+        radius:                 DJIStyle.radiusSM
         visible:                !_isExpanded
-        color:                  _fullItem.pipState.isDark ? Qt.rgba(0,0,0,0.75) : Qt.rgba(0,0,0,0.5)
+        color:                  DJIStyle.overlayBackground
+        border.width:           DJIStyle.hudBorderWidth
+        border.color:           DJIStyle.hudBorder
         Image {
             width:              parent.width  * 0.75
             height:             parent.height * 0.75

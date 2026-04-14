@@ -198,15 +198,27 @@ Popup {
         acceptButton.enabled = false
     }
 
+    // Modern dialog background with glassmorphism effect
     Rectangle {
         x:              mainLayout.x - _contentMargin
         y:              mainLayout.y - _contentMargin
         width:          mainLayout.width + _contentMargin * 2
         height:         mainLayout.height + _contentMargin * 2
-        color:          _qgcPal.windowShade
-        radius:         root.padding / 2
+        color:          DJIStyle.cardBackground
+        radius:         DJIStyle.dialogRadius
         border.width:   1
-        border.color:   _qgcPal.windowShadeLight
+        border.color:   DJIStyle.borderColor
+
+        // Soft shadow effect
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: -2
+            z: -1
+            radius: parent.radius + 2
+            color: "transparent"
+            border.color: DJIStyle.shadowColor
+            border.width: 3
+        }
     }
 
     ColumnLayout {
@@ -247,7 +259,8 @@ Popup {
             Layout.fillWidth:       true
             Layout.preferredWidth:  Math.min(maxAvailableWidth, totalContentWidth)
             Layout.preferredHeight: Math.min(maxAvailableHeight, totalContentHeight)
-            color:                  _qgcPal.window
+            color:                  DJIStyle.surfaceColor
+            radius:                 DJIStyle.radiusSM
 
             property real totalContentWidth:    dialogContentParent.childrenRect.width + _contentMargin * 2
             property real totalContentHeight:   dialogContentParent.childrenRect.height + _contentMargin * 2

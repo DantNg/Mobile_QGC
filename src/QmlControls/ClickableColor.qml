@@ -3,12 +3,15 @@ import QtQuick.Controls
 import QtQuick.Dialogs
 import Qt.labs.platform
 
+import QGroundControl.Controls
+
 Rectangle {
     id:             _root
     width:          80
     height:         20
     border.width:   1
-    border.color:   "black"
+    border.color:   DJIStyle.borderColor
+    radius:         DJIStyle.radiusSM
 
     signal colorSelected(var color)
 

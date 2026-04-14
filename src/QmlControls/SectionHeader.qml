@@ -51,7 +51,7 @@ CheckBox {
         Rectangle {
             Layout.fillWidth:   true
             height:             1
-            color:              qgcPal.text
+            color:              DJIStyle.dividerColor
         }
     }
 

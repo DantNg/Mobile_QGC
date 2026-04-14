@@ -83,12 +83,20 @@ TextField {
     }
 
     background: Rectangle {
-        border.width:   control.validationError ? 2 : (qgcPal.globalTheme === QGCPalette.Light ? 1 : 0)
-        border.color:   control.validationError ? qgcPal.colorRed : qgcPal.buttonBorder
-        radius:         ScreenTools.defaultBorderRadius
-        color:          qgcPal.textField
+        border.width:   control.validationError ? 2 : (control.activeFocus ? 1.5 : 1)
+        border.color:   control.validationError ? qgcPal.colorRed : (control.activeFocus ? DJIStyle.accentColor : DJIStyle.inputBorder)
+        radius:         DJIStyle.inputRadius
+        color:          DJIStyle.inputBackground
         implicitWidth:  ScreenTools.implicitTextFieldWidth
         implicitHeight: ScreenTools.implicitTextFieldHeight
+
+        Behavior on border.color {
+            ColorAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
+        }
+
+        Behavior on border.width {
+            NumberAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
+        }
 
         RowLayout {
             id:                     unitsHelpLayout

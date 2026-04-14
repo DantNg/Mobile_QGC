@@ -16,8 +16,8 @@ DelayButton {
     font.family:    ScreenTools.normalFontFamily
     delay:          defaultDelay
 
-    property bool   showBorder:     qgcPal.globalTheme === QGCPalette.Light
-    property real   backRadius:     ScreenTools.defaultBorderRadius
+    property bool   showBorder:     false
+    property real   backRadius:     DJIStyle.buttonRadius
     property real   heightFactor:   0.5
     property real   fontWeight:     Font.Normal // default for qml Text
     property real   pointSize:      ScreenTools.defaultFontPointSize

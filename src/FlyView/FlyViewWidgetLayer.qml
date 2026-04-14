@@ -163,6 +163,26 @@ Item {
         z:                  QGroundControl.zOrderTopMost
     }
 
+    // DJI-style bottom-center telemetry bar (V.S, H.S, H, D)
+    DJITelemetryBar {
+        id:                         djiTelemetryBar
+        anchors.bottom:             parent.bottom
+        anchors.bottomMargin:       _toolsMargin
+        anchors.horizontalCenter:   parent.horizontalCenter
+        z:                          QGroundControl.zOrderWidgets
+        visible:                    _activeVehicle && !QGroundControl.videoManager.fullScreen
+    }
+
+    // DJI-style right camera control panel
+    DJICameraPanel {
+        id:                     djiCameraPanel
+        anchors.right:          parent.right
+        anchors.rightMargin:    _toolsMargin
+        anchors.verticalCenter: parent.verticalCenter
+        z:                      QGroundControl.zOrderWidgets
+        visible:                _activeVehicle && !QGroundControl.videoManager.fullScreen
+    }
+
     MapScale {
         id:                 mapScale
         anchors.left:       toolStrip.right

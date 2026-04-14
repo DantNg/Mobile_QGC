@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Patterns - QGroundControl</title>
+    <style>
+        :root { --primary: #7c3aed; --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+        .header { background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%); color: white; padding: 40px; text-align: center; }
+        .header h1 { font-size: 2.2rem; font-weight: 800; }
+        .header p { opacity: 0.9; margin-top: 8px; }
+        nav { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 40px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        nav ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        nav a { color: #7c3aed; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 500; transition: all 0.2s; font-size: 0.95rem; }
+        nav a:hover { background: #f3e8ff; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+        h2 { font-size: 1.6rem; font-weight: 700; margin: 40px 0 16px; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+        h3 { font-size: 1.2rem; margin: 24px 0 12px; }
+        h4 { margin: 16px 0 8px; }
+        p, li { margin-bottom: 8px; }
+        ul { margin-left: 24px; margin-bottom: 16px; }
+        .code-block {
+            background: #1e293b; color: #e2e8f0; border-radius: 12px; padding: 20px 24px;
+            font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.88rem;
+            overflow-x: auto; margin: 16px 0; line-height: 1.6; white-space: pre;
+        }
+        .comment { color: #64748b; }
+        .keyword { color: #c4b5fd; }
+        .type { color: #7dd3fc; }
+        .string { color: #86efac; }
+        .pattern-card {
+            background: var(--card-bg); border: 2px solid var(--border); border-radius: 16px;
+            padding: 28px; margin: 24px 0; transition: border-color 0.2s;
+        }
+        .pattern-card:hover { border-color: var(--primary); }
+        .pattern-card h3 { margin-top: 0; color: var(--primary); font-size: 1.3rem; }
+        .pattern-badge {
+            display: inline-block; background: #ede9fe; color: #6d28d9;
+            padding: 3px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .info-box { background: #faf5ff; border: 1px solid #ddd6fe; border-radius: 12px; padding: 20px; margin: 16px 0; }
+        .info-box h4 { color: var(--primary); margin-bottom: 8px; }
+        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+        .comparison > div { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+        .comparison h4 { margin-top: 0; }
+        table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+        th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+        th { background: #f5f3ff; font-weight: 600; }
+        code { background: #f5f3ff; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+        footer { text-align: center; padding: 30px; color: var(--text-muted); border-top: 1px solid var(--border); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧩 Design Patterns</h1>
+        <p>Các design pattern và logic đặc biệt trong QGroundControl</p>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="index.html">🏠 Tổng quan</a></li>
+            <li><a href="architecture.html">🏗️ Kiến trúc</a></li>
+            <li><a href="design-patterns.html">🧩 Design Patterns</a></li>
+            <li><a href="core-modules.html">⚙️ Core Modules</a></li>
+            <li><a href="communication.html">📡 Communication</a></li>
+            <li><a href="build-system.html">🔨 Build System</a></li>
+            <li><a href="qml-ui.html">🎨 QML & UI</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+
+        <!-- PATTERN 1: SINGLETON -->
+        <div class="pattern-card">
+            <span class="pattern-badge">Creational</span>
+            <h3>1. Singleton Pattern</h3>
+            <p>QGC sử dụng Singleton rộng rãi cho các manager classes. Các singleton được truy cập qua <code>::instance()</code> static method.</p>
+
+            <table>
+                <tr><th>Singleton Class</th><th>Trách nhiệm</th></tr>
+                <tr><td><code>MultiVehicleManager</code></td><td>Quản lý tất cả connected vehicles</td></tr>
+                <tr><td><code>LinkManager</code></td><td>Quản lý communication links</td></tr>
+                <tr><td><code>MAVLinkProtocol</code></td><td>Parse & route MAVLink messages</td></tr>
+                <tr><td><code>SettingsManager</code></td><td>Quản lý 25+ settings groups</td></tr>
+                <tr><td><code>QGroundControlQmlGlobal</code></td><td>QML global context</td></tr>
+            </table>
+
+            <div class="code-block"><span class="comment">// Cách truy cập singleton</span>
+<span class="type">Vehicle</span>* vehicle = <span class="type">MultiVehicleManager</span>::instance()-&gt;activeVehicle();
+<span class="type">LinkManager</span>::instance()-&gt;createConnectedLink(config);
+<span class="type">SettingsManager</span>::instance()-&gt;appSettings()-&gt;offlineEditingFirmwareClass();</div>
+
+            <div class="info-box">
+                <h4>💡 QML Singleton</h4>
+                <p>Một số class sử dụng <code>QML_SINGLETON</code> macro để expose singleton trực tiếp cho QML mà không cần qua context property.</p>
+            </div>
+        </div>
+
+        <!-- PATTERN 2: FACT SYSTEM -->
+        <div class="pattern-card">
+            <span class="pattern-badge">Behavioral / Architectural</span>
+            <h3>2. Fact System Pattern (Unique to QGC)</h3>
+            <p>Đây là <strong>design pattern quan trọng nhất</strong> và độc đáo nhất của QGC. Fact System là một hệ thống metadata-driven cho toàn bộ vehicle parameters và app settings.</p>
+
+            <h4>Kiến trúc Fact System:</h4>
+            <div class="code-block"><span class="comment">// Hierarchy: FactMetaData → Fact → FactGroup → Vehicle</span>
+
+┌─────────────────────────────────┐
+│         <span class="type">FactMetaData</span>              │ ← JSON metadata (type, min, max, units, enums)
+│  - type, min, max, defaultValue │
+│  - shortDescription, units      │
+│  - enumStrings, enumValues      │
+│  - bitmaskStrings, bitmaskValues│
+└──────────┬──────────────────────┘
+           │ attached to
+           ▼
+┌─────────────────────────────────┐
+│             <span class="type">Fact</span>                   │ ← Single value container
+│  - rawValue / cookedValue       │ ← Dual value: raw (storage) vs cooked (display)
+│  - validate()                   │
+│  - enumOrValueString()          │
+│  - deferredValueChangeSignal()  │ ← Rate-limited UI updates
+└──────────┬──────────────────────┘
+           │ contained in
+           ▼
+┌─────────────────────────────────┐
+│          <span class="type">FactGroup</span>                │ ← Hierarchical container
+│  - facts: Map&lt;name, Fact*&gt;      │
+│  - groups: Map&lt;name, FactGroup*&gt;│
+│  - handleMessage(mavlink_msg)   │ ← Direct MAVLink processing!
+│  - setLiveUpdates(bool)         │
+└──────────┬──────────────────────┘
+           │ attached to
+           ▼
+┌─────────────────────────────────┐
+│           <span class="type">Vehicle</span>                  │
+│  - gps FactGroup                │
+│  - battery FactGroup            │
+│  - wind FactGroup               │
+│  - temperature FactGroup        │
+│  - ... 15+ FactGroups           │
+└─────────────────────────────────┘</div>
+
+            <h4>Dual Value Concept (rawValue vs cookedValue):</h4>
+            <div class="comparison">
+                <div>
+                    <h4>🔧 rawValue</h4>
+                    <p>Giá trị gốc từ vehicle/MAVLink. Dùng cho storage và protocol.</p>
+                    <div class="code-block"><span class="comment">// Altitude in meters (raw)</span>
+fact-&gt;rawValue().toDouble(); <span class="comment">// 100.0</span></div>
+                </div>
+                <div>
+                    <h4>👁️ cookedValue</h4>
+                    <p>Giá trị đã convert cho hiển thị (có đơn vị). Dùng cho UI.</p>
+                    <div class="code-block"><span class="comment">// Altitude in feet (cooked)</span>
+fact-&gt;cookedValue().toDouble(); <span class="comment">// 328.08</span></div>
+                </div>
+            </div>
+
+            <h4>Metadata JSON:</h4>
+            <div class="code-block"><span class="comment">// *.FactMetaData.json - Mỗi parameter được mô tả bằng JSON</span>
+{
+    <span class="string">"name"</span>:             <span class="string">"PARAM_NAME"</span>,
+    <span class="string">"type"</span>:             <span class="string">"Float"</span>,
+    <span class="string">"shortDescription"</span>: <span class="string">"Parameter description"</span>,
+    <span class="string">"min"</span>:              0,
+    <span class="string">"max"</span>:              100,
+    <span class="string">"defaultValue"</span>:     50,
+    <span class="string">"units"</span>:            <span class="string">"m/s"</span>,
+    <span class="string">"decimalPlaces"</span>:    2
+}</div>
+        </div>
+
+        <!-- PATTERN 3: PLUGIN SYSTEM -->
+        <div class="pattern-card">
+            <span class="pattern-badge">Structural</span>
+            <h3>3. Plugin / Strategy Pattern</h3>
+            <p>QGC sử dụng <strong>FirmwarePlugin</strong> pattern để abstract firmware-specific behavior. Đây là sự kết hợp giữa Strategy và Abstract Factory pattern.</p>
+
+            <div class="code-block"><span class="comment">// Plugin hierarchy</span>
+┌───────────────────┐
+│  <span class="type">FirmwarePlugin</span>     │ ← Abstract base: flight modes, capabilities, params
+│  (virtual methods) │
+└─────────┬─────────┘
+          │
+    ┌─────┼────────┐
+    ▼     ▼        ▼
+┌───────┐┌───────┐┌─────────┐
+│<span class="type">PX4</span>    ││<span class="type">APM</span>    ││<span class="type">Generic</span>  │
+│Plugin  ││Plugin  ││Plugin   │
+└───┬───┘└───┬───┘└─────────┘
+    │        │
+    ▼        ▼
+┌───────┐┌───────────────────────┐
+│PX4    ││APMFlightModes         │
+│Flight ││APMSensors             │
+│Modes  ││APMSafety              │
+└───────┘│APMPower               │
+         │APMSubFrameComponent   │
+         └───────────────────────┘</div>
+
+            <h4>FirmwarePlugin Capabilities:</h4>
+            <div class="code-block"><span class="keyword">enum class</span> <span class="type">FirmwareCapabilities</span> {
+    SetFlightModeCapability,     <span class="comment">// Can change flight mode</span>
+    PauseVehicleCapability,      <span class="comment">// Can pause in-flight</span>
+    GuidedModeCapability,        <span class="comment">// Supports guided navigation</span>
+    TakeoffVehicleCapability,    <span class="comment">// Supports auto takeoff</span>
+    OrbitModeCapability,         <span class="comment">// Can orbit a point</span>
+    ROIModeCapability,           <span class="comment">// Region of Interest tracking</span>
+    ChangeHeadingCapability,     <span class="comment">// Can change heading in-flight</span>
+};</div>
+
+            <h4>Parameter Remapping (Version-aware):</h4>
+            <div class="code-block"><span class="comment">// FirmwarePlugin handles parameter renaming across firmware versions</span>
+<span class="comment">// Example: ArduPilot renamed TUNE_LOW → TUNE_MIN in v4.0</span>
+<span class="keyword">virtual</span> QString remapParamNameHigestAvailableVersion(
+    <span class="keyword">int</span> majorVersion, <span class="keyword">int</span> minorVersion,
+    <span class="keyword">const</span> QString&amp; paramName);</div>
+        </div>
+
+        <!-- PATTERN 4: OBSERVER -->
+        <div class="pattern-card">
+            <span class="pattern-badge">Behavioral</span>
+            <h3>4. Observer Pattern (Qt Signal/Slot)</h3>
+            <p>QGC tận dụng Qt Signal/Slot mechanism - một implementation mạnh mẽ của Observer pattern. Đặc biệt với <strong>Q_PROPERTY NOTIFY</strong> cho automatic QML binding.</p>
+
+            <div class="code-block"><span class="comment">// C++ Class</span>
+<span class="keyword">class</span> <span class="type">Vehicle</span> : <span class="keyword">public</span> <span class="type">FactGroup</span> {
+    Q_OBJECT
+    
+    <span class="comment">// Q_PROPERTY tự động tạo observer pattern cho QML</span>
+    Q_PROPERTY(<span class="keyword">bool</span> armed READ armed NOTIFY armedChanged)
+    Q_PROPERTY(QString flightMode READ flightMode NOTIFY flightModeChanged)
+    Q_PROPERTY(<span class="type">QGeoCoordinate</span> coordinate READ coordinate NOTIFY coordinateChanged)
+    
+<span class="keyword">signals</span>:
+    <span class="keyword">void</span> armedChanged(<span class="keyword">bool</span> armed);
+    <span class="keyword">void</span> flightModeChanged(<span class="keyword">const</span> QString&amp; flightMode);
+    <span class="keyword">void</span> coordinateChanged(<span class="type">QGeoCoordinate</span> coordinate);
+};
+
+<span class="comment">// QML tự động subscribe - không cần manual connect</span>
+<span class="comment">// QGCLabel { text: vehicle.flightMode }  // Auto-updates!</span></div>
+
+            <h4>Deferred Signal Pattern:</h4>
+            <div class="code-block"><span class="comment">// Fact sử dụng deferred signals để tránh flood UI khi telemetry update nhanh</span>
+<span class="comment">// Thay vì emit mỗi lần value thay đổi, nó batch signals</span>
+fact-&gt;setDeferredValueChangeSignal(<span class="keyword">true</span>);
+<span class="comment">// ... nhiều updates ...</span>
+fact-&gt;clearDeferredValueChangeSignal(); <span class="comment">// Emit 1 lần duy nhất</span></div>
+        </div>
+
+        <!-- PATTERN 5: COMPOSITE -->
+        <div class="pattern-card">
+            <span class="pattern-badge">Structural</span>
+            <h3>5. Composite Pattern (Mission Items)</h3>
+            <p>Mission system sử dụng Composite pattern cho mission items có cấu trúc phân cấp:</p>
+
+            <div class="code-block">┌──────────────────────┐
+│  <span class="type">VisualMissionItem</span>     │ ← Abstract base
+└──────────┬───────────┘
+           │
+     ┌─────┴──────────────┐
+     ▼                    ▼
+┌──────────────┐  ┌──────────────────┐
+│<span class="type">SimpleMission</span>  │  │<span class="type">ComplexMissionItem</span> │ ← Container (Composite)
+│<span class="type">Item</span>          │  │  (chứa nhiều      │
+│ (single cmd) │  │   simple items)   │
+└──────────────┘  └────────┬─────────┘
+                           │
+              ┌────────────┼────────────┐
+              ▼            ▼            ▼
+        ┌──────────┐┌──────────┐┌──────────────┐
+        │<span class="type">Survey</span>    ││<span class="type">Structure</span> ││<span class="type">Corridor</span>      │
+        │<span class="type">Complex</span>   ││<span class="type">Scan</span>      ││<span class="type">Scan</span>          │
+        │<span class="type">Item</span>      ││<span class="type">Complex</span>   ││<span class="type">ComplexItem</span>   │
+        └──────────┘│<span class="type">Item</span>      │└──────────────┘
+                    └──────────┘</div>
+        </div>
+
+        <!-- PATTERN 6: ABSTRACT FACTORY -->
+        <div class="pattern-card">
+            <span class="pattern-badge">Creational</span>
+            <h3>6. Abstract Factory (AutoPilotPlugin)</h3>
+            <p>Mỗi firmware type tạo ra bộ UI components riêng thông qua AutoPilotPlugin factory:</p>
+
+            <div class="code-block"><span class="comment">// FirmwarePlugin đóng vai trò Abstract Factory</span>
+<span class="type">AutoPilotPlugin</span>* plugin = vehicle-&gt;firmwarePlugin()-&gt;autopilotPlugin(vehicle);
+
+<span class="comment">// Mỗi firmware trả về các VehicleComponents khác nhau:</span>
+
+<span class="comment">// PX4:</span>
+<span class="comment">//   - AirframeComponent</span>
+<span class="comment">//   - SensorsComponent</span>
+<span class="comment">//   - RadioComponent</span>
+<span class="comment">//   - FlightModesComponent</span>
+<span class="comment">//   - SafetyComponent</span>
+<span class="comment">//   - PowerComponent</span>
+
+<span class="comment">// ArduPilot:</span>
+<span class="comment">//   - APMFlightModesComponent</span>
+<span class="comment">//   - APMSensorsComponent</span>
+<span class="comment">//   - APMRadioComponent</span>
+<span class="comment">//   - APMSafetyComponent</span>
+<span class="comment">//   - APMPowerComponent</span>
+<span class="comment">//   - APMMotorComponent</span>
+<span class="comment">//   - APMSubFrameComponent (submarine only)</span></div>
+        </div>
+
+        <!-- PATTERN 7: SHARED POINTER -->
+        <div class="pattern-card">
+            <span class="pattern-badge">Memory Management</span>
+            <h3>7. Shared Pointer Pattern (Links)</h3>
+            <p>Communication links sử dụng <code>std::shared_ptr</code> cho lifetime management:</p>
+
+            <div class="code-block"><span class="comment">// LinkInterface sử dụng shared_ptr để tránh use-after-free</span>
+<span class="keyword">using</span> <span class="type">SharedLinkInterfacePtr</span> = std::shared_ptr&lt;<span class="type">LinkInterface</span>&gt;;
+
+<span class="comment">// Vehicle giữ shared_ptr đến link</span>
+<span class="comment">// Khi vehicle bị xóa, link ref count giảm</span>
+<span class="comment">// Link chỉ bị destroy khi không còn ai reference</span>
+
+<span class="comment">// Multi-link support: 1 vehicle có thể dùng nhiều links</span>
+<span class="comment">// VehicleLinkManager quản lý primary/secondary links</span></div>
+        </div>
+
+        <!-- PATTERN 8: COMMAND -->
+        <div class="pattern-card">
+            <span class="pattern-badge">Behavioral</span>
+            <h3>8. Command Pattern (Mission Commands)</h3>
+            <p>Mission commands được tổ chức theo Command pattern với metadata-driven UI:</p>
+
+            <div class="code-block"><span class="comment">// MissionCommandTree: Registry of all MAVLink commands</span>
+<span class="comment">// MissionCommandUIInfo: Metadata for command UI rendering</span>
+<span class="comment">// MissionCommandList: Available commands per vehicle type</span>
+
+<span class="comment">// JSON defines command UI:</span>
+{
+    <span class="string">"id"</span>: 16,                         <span class="comment">// MAV_CMD_NAV_WAYPOINT</span>
+    <span class="string">"rawName"</span>: <span class="string">"MAV_CMD_NAV_WAYPOINT"</span>,
+    <span class="string">"friendlyName"</span>: <span class="string">"Waypoint"</span>,
+    <span class="string">"description"</span>: <span class="string">"Travel to a position"</span>,
+    <span class="string">"param1"</span>: {
+        <span class="string">"label"</span>: <span class="string">"Hold"</span>,
+        <span class="string">"units"</span>: <span class="string">"secs"</span>,
+        <span class="string">"default"</span>: 0,
+        <span class="string">"decimalPlaces"</span>: 0
+    }
+}</div>
+        </div>
+
+        <!-- PATTERN 9: HEARTBEAT -->
+        <div class="pattern-card">
+            <span class="pattern-badge">Communication</span>
+            <h3>9. Heartbeat / Watchdog Pattern</h3>
+            <p>QGC sử dụng heartbeat mechanism cho vehicle connection monitoring:</p>
+
+            <div class="code-block"><span class="comment">// VehicleLinkManager: heartbeat monitoring</span>
+<span class="comment">// - GCS gửi heartbeat mỗi 1 giây</span>
+<span class="comment">// - Vehicle phải respond trong 3.5 giây</span>
+<span class="comment">// - Quá timeout → communicationLost = true</span>
+<span class="comment">// - Tất cả links lost → vehicle disconnected</span>
+
+<span class="comment">// MultiVehicleManager phát heartbeat:</span>
+<span class="comment">// init() → start heartbeat timer</span>
+<span class="comment">// Timer fires → send HEARTBEAT on all active links</span>
+
+<span class="comment">// New vehicle detection:</span>
+<span class="comment">// MAVLinkProtocol nhận HEARTBEAT từ unknown sysid</span>
+<span class="comment">// → emit vehicleHeartbeatInfo()</span>
+<span class="comment">// → MultiVehicleManager tạo Vehicle mới</span></div>
+        </div>
+
+        <!-- PATTERN 10: MODEL-VIEW -->
+        <div class="pattern-card">
+            <span class="pattern-badge">Architectural</span>
+            <h3>10. Model-View Pattern (QML Integration)</h3>
+            <p>QGC bridge C++ models sang QML views thông qua <code>QmlObjectListModel</code>:</p>
+
+            <div class="code-block"><span class="comment">// C++ side: QmlObjectListModel kế thừa QAbstractListModel</span>
+<span class="comment">// Cung cấp list data cho QML ListView/Repeater</span>
+
+<span class="keyword">class</span> <span class="type">QmlObjectListModel</span> : <span class="keyword">public</span> <span class="type">QAbstractListModel</span> {
+    <span class="comment">// Tự động notify QML khi items thêm/xóa/thay đổi</span>
+    <span class="comment">// QML Repeater tự động update khi model thay đổi</span>
+};
+
+<span class="comment">// QML side:</span>
+<span class="comment">// Repeater {</span>
+<span class="comment">//     model: QGroundControl.multiVehicleManager.vehicles</span>
+<span class="comment">//     delegate: VehicleIndicator { vehicle: object }</span>
+<span class="comment">// }</span></div>
+        </div>
+
+        <h2>Tổng Kết Design Patterns</h2>
+        <table>
+            <tr>
+                <th>Pattern</th>
+                <th>Nơi Sử Dụng</th>
+                <th>Mục Đích</th>
+            </tr>
+            <tr>
+                <td>Singleton</td>
+                <td>Managers (Vehicle, Link, Settings, ...)</td>
+                <td>Global access point cho shared resources</td>
+            </tr>
+            <tr>
+                <td>Fact System</td>
+                <td>Parameters, Settings, Telemetry</td>
+                <td>Metadata-driven value management với validation</td>
+            </tr>
+            <tr>
+                <td>Strategy/Plugin</td>
+                <td>FirmwarePlugin, AutoPilotPlugin</td>
+                <td>Firmware-specific behavior abstraction</td>
+            </tr>
+            <tr>
+                <td>Observer</td>
+                <td>Qt Signal/Slot, Q_PROPERTY</td>
+                <td>Reactive UI updates</td>
+            </tr>
+            <tr>
+                <td>Composite</td>
+                <td>Mission Items</td>
+                <td>Complex missions from simple items</td>
+            </tr>
+            <tr>
+                <td>Abstract Factory</td>
+                <td>AutoPilotPlugin</td>
+                <td>Firmware-specific UI components</td>
+            </tr>
+            <tr>
+                <td>Shared Pointer</td>
+                <td>LinkInterface</td>
+                <td>Safe lifetime management</td>
+            </tr>
+            <tr>
+                <td>Command</td>
+                <td>Mission Commands</td>
+                <td>Encapsulate MAVLink commands</td>
+            </tr>
+            <tr>
+                <td>Heartbeat</td>
+                <td>VehicleLinkManager</td>
+                <td>Connection health monitoring</td>
+            </tr>
+            <tr>
+                <td>Model-View</td>
+                <td>QmlObjectListModel → QML</td>
+                <td>C++ data → QML view binding</td>
+            </tr>
+        </table>
+    </div>
+
+    <footer>
+        <p>QGroundControl Design Patterns Documentation</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Communication System - QGroundControl</title>
+    <style>
+        :root { --primary: #0284c7; --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+        .header { background: linear-gradient(135deg, #0c4a6e 0%, #0284c7 100%); color: white; padding: 40px; text-align: center; }
+        .header h1 { font-size: 2.2rem; font-weight: 800; }
+        .header p { opacity: 0.9; margin-top: 8px; }
+        nav { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 40px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        nav ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        nav a { color: var(--primary); text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 500; font-size: 0.95rem; }
+        nav a:hover { background: #e0f2fe; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+        h2 { font-size: 1.6rem; font-weight: 700; margin: 40px 0 16px; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+        h3 { font-size: 1.15rem; margin: 20px 0 10px; }
+        h4 { margin: 14px 0 6px; }
+        p { margin-bottom: 10px; }
+        ul, ol { margin-left: 24px; margin-bottom: 14px; }
+        li { margin-bottom: 4px; }
+        .code-block {
+            background: #1e293b; color: #e2e8f0; border-radius: 12px; padding: 20px 24px;
+            font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.88rem;
+            overflow-x: auto; margin: 14px 0; line-height: 1.6; white-space: pre;
+        }
+        .comment { color: #64748b; }
+        .keyword { color: #7dd3fc; }
+        .type { color: #67e8f9; }
+        .string { color: #86efac; }
+        .section-card {
+            background: var(--card-bg); border: 2px solid var(--border); border-radius: 16px;
+            padding: 28px; margin: 24px 0;
+        }
+        .section-card:hover { border-color: var(--primary); }
+        .section-card h3 { margin-top: 0; color: var(--primary); font-size: 1.3rem; }
+        table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+        th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; font-size: 0.93rem; }
+        th { background: #e0f2fe; font-weight: 600; }
+        code { background: #e0f2fe; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+        .info-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 18px; margin: 14px 0; }
+        .info-box h4 { color: var(--primary); margin-bottom: 6px; }
+        .warn-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 18px; margin: 14px 0; }
+        .warn-box h4 { color: #d97706; margin-bottom: 6px; }
+        .danger-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 18px; margin: 14px 0; }
+        .danger-box h4 { color: #dc2626; margin-bottom: 6px; }
+        footer { text-align: center; padding: 30px; color: var(--text-muted); border-top: 1px solid var(--border); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📡 Communication System</h1>
+        <p>MAVLink Protocol, Link Management, và Message Routing trong QGroundControl</p>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="index.html">🏠 Tổng quan</a></li>
+            <li><a href="architecture.html">🏗️ Kiến trúc</a></li>
+            <li><a href="design-patterns.html">🧩 Design Patterns</a></li>
+            <li><a href="core-modules.html">⚙️ Core Modules</a></li>
+            <li><a href="communication.html">📡 Communication</a></li>
+            <li><a href="build-system.html">🔨 Build System</a></li>
+            <li><a href="qml-ui.html">🎨 QML & UI</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+
+        <h2>1. Tổng Quan Communication Stack</h2>
+        <div class="code-block">
+┌─────────────────────────────────────────────────────────────┐
+│                    <span class="type">Application Layer</span>                         │
+│  Vehicle, MissionManager, ParameterManager, ...             │
+└────────────────────────┬────────────────────────────────────┘
+                         │ mavlink_message_t
+                         │
+┌────────────────────────┴────────────────────────────────────┐
+│                    <span class="type">MAVLinkProtocol</span>                           │
+│  Parse bytes → messages, sequence tracking, loss detection  │
+│  Route messages to correct Vehicle by system ID             │
+└────────────────────────┬────────────────────────────────────┘
+                         │ raw bytes
+                         │
+┌────────────────────────┴────────────────────────────────────┐
+│                    <span class="type">LinkManager</span>                               │
+│  Create/manage links, channel allocation, auto-connect      │
+└────┬──────────┬──────────┬──────────┬──────────┬───────────┘
+     │          │          │          │          │
+     ▼          ▼          ▼          ▼          ▼
+┌────────┐┌────────┐┌────────┐┌────────────┐┌──────────┐
+│<span class="type">Serial</span>  ││<span class="type">UDP</span>     ││<span class="type">TCP</span>     ││<span class="type">Bluetooth</span>   ││<span class="type">MockLink</span>  │
+│<span class="type">Link</span>    ││<span class="type">Link</span>    ││<span class="type">Link</span>    ││<span class="type">Link</span>        ││(testing) │
+└────────┘└────────┘└────────┘└────────────┘└──────────┘
+     │          │          │          │
+     ▼          ▼          ▼          ▼
+  <span class="string">USB/UART</span>    <span class="string">Network</span>    <span class="string">Network</span>    <span class="string">BLE/BT</span>
+        </div>
+
+        <!-- MAVLink Protocol -->
+        <div class="section-card">
+            <h3>2. MAVLink Protocol</h3>
+            <p>MAVLink là giao thức nhị phân nhẹ cho giao tiếp drone. QGC hỗ trợ cả MAVLink v1 và v2.</p>
+
+            <h4>MAVLink Message Structure:</h4>
+            <div class="code-block"><span class="comment">// MAVLink v2 Frame Format:</span>
+┌────┬────┬────┬────┬─────┬─────┬─────┬─────┬──────────┬────────┬──────────┐
+│0xFD│Len │IFl │CFl │ Seq │SysID│CompID│MsgID│ Payload  │Checksum│Signature │
+│ 1B │ 1B │ 1B │ 1B │ 1B  │ 1B  │ 1B  │ 3B  │ 0-255B   │  2B    │  13B(opt)│
+└────┴────┴────┴────┴─────┴─────┴─────┴─────┴──────────┴────────┴──────────┘
+
+<span class="comment">// 0xFD = MAVLink v2 start marker (0xFE = v1)</span>
+<span class="comment">// SysID = System ID (1-255, identifies vehicle)</span>
+<span class="comment">// CompID = Component ID (autopilot, camera, gimbal, ...)</span>
+<span class="comment">// MsgID = Message type (3 bytes = 16.7M possible messages)</span>
+<span class="comment">// Signature = Optional MAVLink2 signing for security</span></div>
+
+            <h4>Message Processing Pipeline:</h4>
+            <div class="code-block"><span class="comment">// 1. Bytes arrive from LinkInterface</span>
+LinkInterface::bytesReceived(link, data)
+     │
+     ▼
+<span class="comment">// 2. MAVLinkProtocol parses raw bytes</span>
+MAVLinkProtocol::receiveBytes(link, data)
+     ├── mavlink_parse_char()   <span class="comment">// C library function</span>
+     ├── Track sequence numbers <span class="comment">// Detect packet loss</span>
+     ├── Check for new vehicles <span class="comment">// HEARTBEAT = new vehicle?</span>
+     │      └── emit vehicleHeartbeatInfo()
+     ├── Log to file            <span class="comment">// Save .mavlink log</span>
+     └── emit messageReceived(link, message)
+              │
+              ▼
+<span class="comment">// 3. Vehicle processes message</span>
+Vehicle::_mavlinkMessageReceived(link, message)
+     ├── switch(message.msgid)
+     │    ├── HEARTBEAT       → _handleHeartbeat()
+     │    ├── SYS_STATUS      → _handleSysStatus()
+     │    ├── ATTITUDE        → _handleAttitude()
+     │    ├── GPS_RAW_INT     → gpsFactGroup.handleMessage()
+     │    ├── GLOBAL_POSITION → _handleGlobalPosition()
+     │    ├── PARAM_VALUE     → parameterManager.handleMessage()
+     │    ├── MISSION_*       → missionManager.handleMessage()
+     │    ├── STATUSTEXT      → statusTextHandler.handleMessage()
+     │    └── ...
+     │
+     └── FirmwarePlugin specific handling</div>
+        </div>
+
+        <!-- LinkInterface -->
+        <div class="section-card">
+            <h3>3. LinkInterface (Abstract Base)</h3>
+            <p>Tất cả communication links kế thừa từ <code>LinkInterface</code>.</p>
+
+            <h4>Interface chính:</h4>
+            <div class="code-block"><span class="keyword">class</span> <span class="type">LinkInterface</span> : <span class="keyword">public</span> <span class="type">QThread</span> {
+    Q_OBJECT
+    
+<span class="keyword">public</span>:
+    <span class="keyword">virtual bool</span> _connect()    = 0;  <span class="comment">// Establish connection</span>
+    <span class="keyword">virtual void</span> disconnect()   = 0;  <span class="comment">// Close connection</span>
+    <span class="keyword">virtual bool</span> isConnected()  = 0;  <span class="comment">// Connection status</span>
+    
+    <span class="keyword">void</span> writeBytesThreadSafe(<span class="keyword">const</span> QByteArray&amp;); <span class="comment">// Thread-safe write</span>
+    uint8_t mavlinkChannel();  <span class="comment">// Unique MAVLink channel (0-255)</span>
+    
+<span class="keyword">signals</span>:
+    <span class="keyword">void</span> bytesReceived(<span class="type">LinkInterface</span>*, QByteArray);
+    <span class="keyword">void</span> bytesSent(<span class="type">LinkInterface</span>*, QByteArray);
+    <span class="keyword">void</span> connected();
+    <span class="keyword">void</span> disconnected();
+    <span class="keyword">void</span> communicationError(<span class="keyword">const</span> QString&amp; title, <span class="keyword">const</span> QString&amp; error);
+    
+<span class="keyword">protected</span>:
+    <span class="keyword">virtual void</span> _writeBytes(<span class="keyword">const</span> QByteArray&amp;) = 0; <span class="comment">// Actual write</span>
+};</div>
+
+            <h4>Shared Pointer Pattern:</h4>
+            <div class="code-block"><span class="comment">// Links sử dụng shared_ptr để quản lý lifetime an toàn</span>
+<span class="keyword">using</span> <span class="type">SharedLinkInterfacePtr</span> = std::shared_ptr&lt;<span class="type">LinkInterface</span>&gt;;
+
+<span class="comment">// LinkManager::createConnectedLink() trả về shared_ptr</span>
+<span class="comment">// Vehicle giữ shared_ptr → link sống miễn vehicle còn reference</span>
+<span class="comment">// Khi tất cả references giải phóng → link tự cleanup</span></div>
+        </div>
+
+        <!-- Link Types -->
+        <div class="section-card">
+            <h3>4. Các Loại Link</h3>
+            
+            <table>
+                <tr>
+                    <th>Link Type</th>
+                    <th>Transport</th>
+                    <th>Use Case</th>
+                    <th>Config Class</th>
+                </tr>
+                <tr>
+                    <td><strong>SerialLink</strong></td>
+                    <td>UART/USB</td>
+                    <td>Direct USB connection, telemetry radio</td>
+                    <td>SerialConfiguration</td>
+                </tr>
+                <tr>
+                    <td><strong>UDPLink</strong></td>
+                    <td>UDP socket</td>
+                    <td>WiFi, simulator (SITL), multi-vehicle</td>
+                    <td>UDPConfiguration</td>
+                </tr>
+                <tr>
+                    <td><strong>TCPLink</strong></td>
+                    <td>TCP socket</td>
+                    <td>Reliable network connection</td>
+                    <td>TCPConfiguration</td>
+                </tr>
+                <tr>
+                    <td><strong>BluetoothLink</strong></td>
+                    <td>BLE/Classic BT</td>
+                    <td>Mobile device connection</td>
+                    <td>BluetoothConfiguration</td>
+                </tr>
+                <tr>
+                    <td><strong>LogReplayLink</strong></td>
+                    <td>File</td>
+                    <td>Replay recorded .mavlink logs</td>
+                    <td>LogReplayLinkConfiguration</td>
+                </tr>
+                <tr>
+                    <td><strong>MockLink</strong></td>
+                    <td>In-memory</td>
+                    <td>Unit testing, simulated vehicle</td>
+                    <td>MockConfiguration</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- LinkManager -->
+        <div class="section-card">
+            <h3>5. LinkManager</h3>
+            <p>Singleton quản lý tất cả communication links.</p>
+
+            <div class="code-block"><span class="type">LinkManager</span>::instance()
+  │
+  ├── createConnectedLink(config) <span class="comment">// Tạo & kết nối link mới</span>
+  ├── disconnectLink(link)        <span class="comment">// Ngắt kết nối</span>
+  │
+  ├── links()                     <span class="comment">// Tất cả active links</span>
+  ├── linkConfigurations()        <span class="comment">// Saved configurations</span>
+  │
+  ├── allocateMavlinkChannel()    <span class="comment">// Cấp MAVLink channel (0-255)</span>
+  ├── freeMavlinkChannel(ch)      <span class="comment">// Giải phóng channel</span>
+  │
+  ├── startAutoConnectedLinks()   <span class="comment">// Auto-detect & connect on startup</span>
+  │
+  ├── saveLinkConfigurationList() <span class="comment">// Persist to QSettings</span>
+  └── loadLinkConfigurationList() <span class="comment">// Load from QSettings</span></div>
+
+            <h4>Auto-Connect Logic:</h4>
+            <div class="code-block"><span class="comment">// LinkManager auto-detects connections based on AutoConnectSettings:</span>
+
+<span class="comment">// Serial Auto-Connect:</span>
+<span class="comment">// 1. QSerialPortInfo scan mỗi 1 giây</span>
+<span class="comment">// 2. Detect PX4/ArduPilot USB devices (VID/PID matching)</span>
+<span class="comment">// 3. Detect SiK telemetry radios</span>
+<span class="comment">// 4. Auto-create SerialLink + connect</span>
+
+<span class="comment">// UDP Auto-Connect:</span>
+<span class="comment">// 1. Listen trên port 14550 (default MAVLink port)</span>
+<span class="comment">// 2. Simulators (SITL) auto-discover</span>
+<span class="comment">// 3. Auto-create UDPLink</span>
+
+<span class="comment">// Bluetooth Auto-Connect (mobile):</span>
+<span class="comment">// 1. BLE scan cho MAVLink services</span>
+<span class="comment">// 2. Auto-pair & connect</span></div>
+        </div>
+
+        <!-- MAVLink Channel System -->
+        <div class="section-card">
+            <h3>6. MAVLink Channel System</h3>
+            <p>Mỗi link được cấp phát một MAVLink channel unique (0-255). Channel cô lập MAVLink state giữa các links.</p>
+
+            <div class="code-block"><span class="comment">// MAVLink C library duy trì state riêng cho mỗi channel:</span>
+<span class="comment">// - Sequence number (để detect packet loss)</span>
+<span class="comment">// - Parse state (multi-byte message assembly)</span>
+<span class="comment">// - Signing state (MAVLink v2 security)</span>
+
+<span class="comment">// Channel allocation:</span>
+<span class="comment">// LinkManager::allocateMavlinkChannel() → free channel từ pool</span>
+<span class="comment">// LinkManager::freeMavlinkChannel()     → trả channel về pool</span>
+
+<span class="comment">// Multi-vehicle scenario:</span>
+<span class="comment">// Link 1 (Serial, channel 0) → Vehicle 1 (sysid 1)</span>
+<span class="comment">// Link 2 (UDP, channel 1)    → Vehicle 2 (sysid 2)</span>
+<span class="comment">// Link 3 (UDP, channel 2)    → Vehicle 1 (redundant link!)</span></div>
+        </div>
+
+        <!-- Vehicle Link Manager -->
+        <div class="section-card">
+            <h3>7. VehicleLinkManager (Per-Vehicle)</h3>
+            <p>Mỗi Vehicle có VehicleLinkManager riêng để quản lý 1+ links.</p>
+
+            <div class="code-block"><span class="type">VehicleLinkManager</span>
+  │
+  ├── primaryLink            <span class="comment">// Link chính (ưu tiên gửi commands)</span>
+  ├── linkNames[]            <span class="comment">// Tên tất cả links</span>
+  ├── linkStatuses[]         <span class="comment">// Status mỗi link</span>
+  │
+  ├── communicationLost      <span class="comment">// true khi không nhận heartbeat &gt; 3.5s</span>
+  ├── communicationLostEnabled <span class="comment">// Có bật detection không</span>
+  ├── autoDisconnect         <span class="comment">// Auto-disconnect khi tất cả links lost</span>
+  │
+  <span class="comment">// Multi-link handling:</span>
+  <span class="comment">// - Vehicle có thể kết nối qua USB + Telemetry radio cùng lúc</span>
+  <span class="comment">// - Nếu primary link mất → auto-switch sang secondary</span>
+  <span class="comment">// - Commands gửi qua primary link</span>
+  <span class="comment">// - Heartbeat được nhận từ any link</span></div>
+        </div>
+
+        <!-- MAVLink Signing -->
+        <div class="section-card">
+            <h3>8. MAVLink Signing (Security)</h3>
+            <p>MAVLink v2 hỗ trợ message signing để chống giả mạo.</p>
+
+            <div class="code-block"><span class="comment">// MAVLink Signing workflow:</span>
+<span class="comment">// 1. Both GCS and vehicle share a secret key (256-bit)</span>
+<span class="comment">// 2. Each message signed with SHA-256 truncated to 48-bit</span>
+<span class="comment">// 3. Timestamp prevents replay attacks</span>
+<span class="comment">// 4. Key exchange via SETUP_SIGNING command</span>
+
+<span class="comment">// Files:</span>
+<span class="comment">// - MAVLinkSigning.h      → Signing state management</span>
+<span class="comment">// - MAVLinkSigningKeys.cc → Key storage</span>
+
+<span class="comment">// Signing is optional - unsigned messages still accepted</span>
+<span class="comment">// when signing not required (accept_unsigned_callback)</span></div>
+
+            <div class="danger-box">
+                <h4>🔒 Security Note</h4>
+                <p>MAVLink signing chỉ cung cấp <strong>authentication</strong> (xác thực nguồn gốc), KHÔNG cung cấp <strong>encryption</strong> (mã hóa nội dung). Payload message vẫn readable bởi bất kỳ ai intercept được.</p>
+            </div>
+        </div>
+
+        <!-- MAVLink FTP -->
+        <div class="section-card">
+            <h3>9. MAVLink FTP</h3>
+            <p>File transfer protocol qua MAVLink cho truy cập filesystem trên vehicle.</p>
+
+            <div class="code-block"><span class="comment">// MAVLink FTP operations:</span>
+<span class="comment">// - List directory contents on vehicle</span>
+<span class="comment">// - Download files (logs, parameters, ...)</span>
+<span class="comment">// - Upload files (waypoints, scripts, ...)</span>
+<span class="comment">// - Create/remove directories</span>
+<span class="comment">// - Burst transfer for large files</span>
+
+<span class="comment">// Used for:</span>
+<span class="comment">// 1. Log file download from vehicle SD card</span>
+<span class="comment">// 2. Parameter file upload/download</span>
+<span class="comment">// 3. Mission file transfer</span>
+<span class="comment">// 4. Firmware update (flashing)</span></div>
+        </div>
+
+        <!-- Heartbeat System -->
+        <div class="section-card">
+            <h3>10. Heartbeat System</h3>
+
+            <div class="code-block"><span class="comment">// ═══════════ GCS → Vehicle ═══════════</span>
+<span class="comment">// MultiVehicleManager phát HEARTBEAT mỗi 1 giây</span>
+<span class="comment">// trên TẤT CẢ active links</span>
+<span class="comment">// Heartbeat chứa: MAV_TYPE_GCS, MAV_AUTOPILOT_INVALID</span>
+
+<span class="comment">// ═══════════ Vehicle → GCS ═══════════</span>
+<span class="comment">// Vehicle gửi HEARTBEAT mỗi 1 giây (configurable)</span>
+<span class="comment">// Chứa: vehicle type, autopilot type, base_mode, custom_mode</span>
+
+<span class="comment">// ═══════════ New Vehicle Detection ═══════════</span>
+<span class="comment">// MAVLinkProtocol nhận HEARTBEAT từ unknown system ID</span>
+<span class="comment">//   → emit vehicleHeartbeatInfo(sysid, compid, autopilot, type)</span>
+<span class="comment">//   → MultiVehicleManager tạo Vehicle mới</span>
+<span class="comment">//   → Vehicle begins parameter download</span>
+
+<span class="comment">// ═══════════ Connection Loss Detection ═══════════</span>
+<span class="comment">// VehicleLinkManager kiểm tra heartbeat timeout:</span>
+<span class="comment">//   - Timeout: 3.5 giây (3.5x heartbeat interval)</span>
+<span class="comment">//   - No heartbeat → communicationLost = true</span>
+<span class="comment">//   - UI hiện "Communication Lost" banner</span>
+<span class="comment">//   - Tất cả links timeout → vehicle disconnected</span></div>
+        </div>
+
+        <!-- Message Forwarding -->
+        <div class="section-card">
+            <h3>11. Message Forwarding</h3>
+            <p>QGC có khả năng forward MAVLink messages giữa các links.</p>
+
+            <div class="code-block"><span class="comment">// Use cases:</span>
+<span class="comment">// 1. Multi-GCS: Forward messages từ vehicle đến GCS khác</span>
+<span class="comment">// 2. Companion computer: Forward qua network</span>
+<span class="comment">// 3. Log analysis tools: Forward to monitoring tools</span>
+
+<span class="comment">// Forwarding links configured in MAVLink Settings:</span>
+<span class="comment">// SettingsManager → mavlinkSettings → forwardMavlink</span>
+<span class="comment">// Default forwarding port: 14445</span></div>
+        </div>
+
+        <!-- Stream Rates -->
+        <div class="section-card">
+            <h3>12. MAVLink Stream Rates</h3>
+            <p>QGC configure tốc độ gửi telemetry data từ vehicle.</p>
+
+            <div class="code-block"><span class="comment">// MAVLinkStreamConfig quản lý data stream rates</span>
+<span class="comment">// Gửi MAV_CMD_SET_MESSAGE_INTERVAL cho mỗi message type</span>
+
+<span class="comment">// Typical stream rates:</span>
+<span class="comment">// ATTITUDE          → 10 Hz (mượt cho HUD)</span>
+<span class="comment">// GLOBAL_POSITION   → 5 Hz  (bản đồ tracking)</span>
+<span class="comment">// SYS_STATUS        → 2 Hz  (battery, mode)</span>
+<span class="comment">// GPS_RAW_INT       → 3 Hz  (GPS data)</span>
+<span class="comment">// RC_CHANNELS       → 2 Hz  (RC input)</span>
+<span class="comment">// SERVO_OUTPUT_RAW  → 2 Hz  (motor output)</span>
+
+<span class="comment">// ArduPilot has APMMavlinkStreamRateSettings</span>
+<span class="comment">// cho custom stream rate configuration</span></div>
+        </div>
+
+        <h2>Communication Flow Summary</h2>
+        <div class="info-box">
+            <h4>📋 Tóm tắt</h4>
+            <ol>
+                <li><strong>Physical Layer</strong>: Serial USB, WiFi UDP, TCP socket, Bluetooth</li>
+                <li><strong>Link Layer</strong>: LinkInterface implementations (SerialLink, UDPLink, ...)</li>
+                <li><strong>Protocol Layer</strong>: MAVLinkProtocol parse, validate, route</li>
+                <li><strong>Application Layer</strong>: Vehicle, ParameterManager, MissionManager xử lý messages</li>
+                <li><strong>Security</strong>: Optional MAVLink v2 signing</li>
+                <li><strong>Reliability</strong>: Heartbeat monitoring, auto-reconnect, multi-link redundancy</li>
+            </ol>
+        </div>
+    </div>
+
+    <footer>
+        <p>QGroundControl Communication System Documentation</p>
+    </footer>
+</body>
+</html>

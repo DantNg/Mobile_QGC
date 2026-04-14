@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build System - QGroundControl</title>
+    <style>
+        :root { --primary: #dc2626; --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+        .header { background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%); color: white; padding: 40px; text-align: center; }
+        .header h1 { font-size: 2.2rem; font-weight: 800; }
+        .header p { opacity: 0.9; margin-top: 8px; }
+        nav { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 40px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        nav ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        nav a { color: var(--primary); text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 500; font-size: 0.95rem; }
+        nav a:hover { background: #fef2f2; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+        h2 { font-size: 1.6rem; font-weight: 700; margin: 40px 0 16px; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+        h3 { font-size: 1.15rem; margin: 20px 0 10px; }
+        h4 { margin: 14px 0 6px; }
+        p { margin-bottom: 10px; }
+        ul, ol { margin-left: 24px; margin-bottom: 14px; }
+        li { margin-bottom: 6px; }
+        .code-block {
+            background: #1e293b; color: #e2e8f0; border-radius: 12px; padding: 20px 24px;
+            font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.88rem;
+            overflow-x: auto; margin: 14px 0; line-height: 1.6; white-space: pre;
+        }
+        .comment { color: #64748b; }
+        .keyword { color: #fca5a5; }
+        .type { color: #7dd3fc; }
+        .string { color: #86efac; }
+        .cmd { color: #fbbf24; }
+        .section-card {
+            background: var(--card-bg); border: 2px solid var(--border); border-radius: 16px;
+            padding: 28px; margin: 24px 0;
+        }
+        .section-card:hover { border-color: var(--primary); }
+        .section-card h3 { margin-top: 0; color: var(--primary); font-size: 1.3rem; }
+        table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+        th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; font-size: 0.93rem; }
+        th { background: #fef2f2; font-weight: 600; }
+        code { background: #fef2f2; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+        .info-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 18px; margin: 14px 0; }
+        .info-box h4 { color: var(--primary); margin-bottom: 6px; }
+        .success-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 18px; margin: 14px 0; }
+        .success-box h4 { color: #16a34a; margin-bottom: 6px; }
+        .tip-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 18px; margin: 14px 0; }
+        .tip-box h4 { color: #2563eb; margin-bottom: 6px; }
+        footer { text-align: center; padding: 30px; color: var(--text-muted); border-top: 1px solid var(--border); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔨 Build System</h1>
+        <p>CMake, Dependencies, Build Options, và CI/CD pipeline</p>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="index.html">🏠 Tổng quan</a></li>
+            <li><a href="architecture.html">🏗️ Kiến trúc</a></li>
+            <li><a href="design-patterns.html">🧩 Design Patterns</a></li>
+            <li><a href="core-modules.html">⚙️ Core Modules</a></li>
+            <li><a href="communication.html">📡 Communication</a></li>
+            <li><a href="build-system.html">🔨 Build System</a></li>
+            <li><a href="qml-ui.html">🎨 QML & UI</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+
+        <!-- Quick Start -->
+        <div class="success-box">
+            <h4>🚀 Quick Build Commands</h4>
+            <div class="code-block"><span class="comment"># Configure (Release build)</span>
+<span class="cmd">cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release</span>
+
+<span class="comment"># Build</span>
+<span class="cmd">cmake --build build --config Release --parallel</span>
+
+<span class="comment"># Run unit tests</span>
+<span class="cmd">cd build && ctest --output-on-failure -L Unit --parallel</span>
+
+<span class="comment"># Hoặc dùng Makefile wrapper:</span>
+<span class="cmd">make configure</span>
+<span class="cmd">make build</span>
+<span class="cmd">make test</span>
+
+<span class="comment"># Hoặc justfile:</span>
+<span class="cmd">just configure</span>
+<span class="cmd">just build</span>
+<span class="cmd">just test</span></div>
+        </div>
+
+        <h2>1. Prerequisites</h2>
+        <table>
+            <tr><th>Component</th><th>Version</th><th>Ghi chú</th></tr>
+            <tr><td>CMake</td><td>3.25+</td><td>Build system generator</td></tr>
+            <tr><td>Qt</td><td>6.10+</td><td>Framework chính (20+ modules)</td></tr>
+            <tr><td>C++ Compiler</td><td>C++20</td><td>MSVC 2022, GCC 13+, Clang 16+</td></tr>
+            <tr><td>Ninja</td><td>Latest</td><td>Recommended build tool (faster than Make)</td></tr>
+            <tr><td>Python</td><td>3.10+</td><td>Build scripts, code generation</td></tr>
+            <tr><td>Git</td><td>Latest</td><td>Version control & submodules</td></tr>
+        </table>
+
+        <h2>2. CMake Configuration Architecture</h2>
+
+        <div class="section-card">
+            <h3>2.1 Root CMakeLists.txt Flow</h3>
+            <div class="code-block"><span class="comment"># Root CMakeLists.txt execution order:</span>
+
+<span class="keyword">1.</span> cmake_minimum_required(3.25)
+<span class="keyword">2.</span> CMAKE_MODULE_PATH setup (cmake/, cmake/find-modules/, ...)
+<span class="keyword">3.</span> include(Helpers)          <span class="comment"># Utility functions</span>
+<span class="keyword">4.</span> include(CustomOptions)    <span class="comment"># Default build options</span>
+<span class="keyword">5.</span> Custom build check        <span class="comment"># Is custom/ directory present?</span>
+<span class="keyword">6.</span> include(Git)              <span class="comment"># Extract version from git tags</span>
+<span class="keyword">7.</span> Compiler caching (ccache) <span class="comment"># Speed up rebuilds</span>
+<span class="keyword">8.</span> project() declaration     <span class="comment"># Name, version, description</span>
+<span class="keyword">9.</span> include(Toolchain)        <span class="comment"># C++20, compiler flags, LTO</span>
+<span class="keyword">10.</span> find_package(Qt6)         <span class="comment"># Find Qt 6.10+ (20+ components)</span>
+<span class="keyword">11.</span> qt_standard_project_setup <span class="comment"># Qt6 project configuration</span>
+<span class="keyword">12.</span> qt_add_executable()       <span class="comment"># Create main target</span>
+<span class="keyword">13.</span> Platform config           <span class="comment"># Windows/macOS/Android/Linux</span>
+<span class="keyword">14.</span> qt_add_qml_module()       <span class="comment"># QML module "QGC 1.0"</span>
+<span class="keyword">15.</span> add_subdirectory(src)     <span class="comment"># Build source code</span>
+<span class="keyword">16.</span> add_subdirectory(test)    <span class="comment"># Build tests (if enabled)</span>
+<span class="keyword">17.</span> Translations              <span class="comment"># Internationalization</span>
+<span class="keyword">18.</span> Install & packaging       <span class="comment"># Deployment</span></div>
+        </div>
+
+        <div class="section-card">
+            <h3>2.2 CustomOptions.cmake - Build Options</h3>
+            
+            <h4>App Configuration:</h4>
+            <table>
+                <tr><th>Option</th><th>Default</th><th>Mô tả</th></tr>
+                <tr><td><code>QGC_APP_NAME</code></td><td>"QGroundControl"</td><td>Tên ứng dụng</td></tr>
+                <tr><td><code>QGC_APP_VERSION</code></td><td>From Git tag</td><td>Version (semver)</td></tr>
+                <tr><td><code>QGC_SETTINGS_VERSION</code></td><td>Integer</td><td>Tăng → clear old settings</td></tr>
+                <tr><td><code>QGC_ORG_DOMAIN</code></td><td>"qgroundcontrol.org"</td><td>Organization domain</td></tr>
+            </table>
+
+            <h4>Build Features:</h4>
+            <table>
+                <tr><th>Option</th><th>Default</th><th>Mô tả</th></tr>
+                <tr><td><code>QGC_STABLE_BUILD</code></td><td>OFF</td><td>Release stable build</td></tr>
+                <tr><td><code>QGC_BUILD_TESTING</code></td><td>OFF</td><td>Enable unit tests</td></tr>
+                <tr><td><code>QGC_USE_CACHE</code></td><td>ON</td><td>Use ccache for faster builds</td></tr>
+                <tr><td><code>QGC_UNITY_BUILD</code></td><td>ON</td><td>Batch compilation (faster)</td></tr>
+                <tr><td><code>QGC_BUILD_INSTALLER</code></td><td>OFF</td><td>Build installer package</td></tr>
+                <tr><td><code>QGC_ENABLE_WERROR</code></td><td>OFF</td><td>Treat warnings as errors</td></tr>
+            </table>
+
+            <h4>Feature Toggles:</h4>
+            <table>
+                <tr><th>Option</th><th>Default</th><th>Mô tả</th></tr>
+                <tr><td><code>QGC_DISABLE_APM_PLUGIN</code></td><td>OFF</td><td>Disable ArduPilot support</td></tr>
+                <tr><td><code>QGC_DISABLE_PX4_PLUGIN</code></td><td>OFF</td><td>Disable PX4 support</td></tr>
+                <tr><td><code>QGC_NO_SERIAL_LINK</code></td><td>OFF</td><td>Disable serial port support</td></tr>
+                <tr><td><code>QGC_ENABLE_UVC</code></td><td>ON</td><td>USB Video Class (webcam)</td></tr>
+                <tr><td><code>QGC_ENABLE_GST_VIDEOSTREAMING</code></td><td>OFF</td><td>GStreamer video</td></tr>
+            </table>
+        </div>
+
+        <div class="section-card">
+            <h3>2.3 Toolchain.cmake - Compiler Configuration</h3>
+            <div class="code-block"><span class="comment"># C++ Standard</span>
+set(CMAKE_CXX_STANDARD <span class="keyword">20</span>)       <span class="comment"># C++20 required</span>
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)   <span class="comment"># No GNU extensions</span>
+
+<span class="comment"># Qt Automation</span>
+set(CMAKE_AUTOMOC ON)   <span class="comment"># Auto moc for Q_OBJECT</span>
+set(CMAKE_AUTOUIC ON)   <span class="comment"># Auto UI compiler</span>
+set(CMAKE_AUTORCC ON)   <span class="comment"># Auto resource compiler</span>
+
+<span class="comment"># Optimizations</span>
+<span class="comment"># PIE - Position Independent Executable (security)</span>
+<span class="comment"># IPO - Inter-Procedural Optimization</span>
+<span class="comment"># LTO - Link-Time Optimization (smaller binary)</span>
+
+<span class="comment"># Fast Linker Selection:</span>
+<span class="comment"># Linux: mold (fastest) → lld → default ld</span>
+<span class="comment"># Windows: lld-link → default link.exe</span>
+
+<span class="comment"># Parallel Autogen</span>
+<span class="comment"># Uses all CPU cores for moc/uic/rcc</span></div>
+        </div>
+
+        <h2>3. Qt6 Dependencies</h2>
+        <div class="section-card">
+            <h3>Required Qt Modules (20+)</h3>
+            <div class="code-block"><span class="comment"># Core</span>
+Qt6::Core Qt6::Concurrent Qt6::Core5Compat Qt6::Gui Qt6::Widgets
+
+<span class="comment"># QML/Quick</span>
+Qt6::Qml Qt6::QmlIntegration Qt6::Quick Qt6::QuickControls2 Qt6::QuickWidgets
+
+<span class="comment"># Location & Maps</span>
+Qt6::Location Qt6::LocationPrivate Qt6::Positioning
+
+<span class="comment"># Multimedia</span>
+Qt6::Multimedia
+
+<span class="comment"># Networking</span>
+Qt6::Network Qt6::HttpServer
+
+<span class="comment"># Data</span>
+Qt6::Sql Qt6::Xml
+
+<span class="comment"># UI Extras</span>
+Qt6::Charts Qt6::Svg Qt6::TextToSpeech Qt6::Sensors
+
+<span class="comment"># 3D</span>
+Qt6::Quick3D
+
+<span class="comment"># State Machine</span>
+Qt6::StateMachine
+
+<span class="comment"># i18n</span>
+Qt6::LinguistTools
+
+<span class="comment"># Optional</span>
+Qt6::Bluetooth Qt6::SerialPort Qt6::OpenGL Qt6::Test Qt6::QuickTest</div>
+        </div>
+
+        <h2>4. Source Build Structure</h2>
+        <div class="section-card">
+            <h3>src/CMakeLists.txt</h3>
+            <div class="code-block"><span class="comment"># Main library target</span>
+qt_add_library(QGroundControlModule STATIC)
+
+<span class="comment"># QML Module registration</span>
+qt_add_qml_module(QGroundControlModule
+    URI QGroundControl
+    VERSION 1.0
+    RESOURCE_PREFIX /qml
+)
+
+<span class="comment"># 24 subdirectories compiled as static libraries:</span>
+add_subdirectory(ADSB)
+add_subdirectory(AnalyzeView)
+add_subdirectory(API)
+add_subdirectory(AutoPilotPlugins)
+add_subdirectory(Camera)
+add_subdirectory(Comms)
+add_subdirectory(FactSystem)
+add_subdirectory(FirmwarePlugin)
+add_subdirectory(FlightMap)
+add_subdirectory(FlyView)
+add_subdirectory(FollowMe)
+add_subdirectory(Gimbal)
+add_subdirectory(GPS)
+add_subdirectory(Joystick)
+add_subdirectory(MAVLink)
+add_subdirectory(MissionManager)
+add_subdirectory(PlanView)
+add_subdirectory(PositionManager)
+add_subdirectory(QmlControls)
+add_subdirectory(QtLocationPlugin)
+add_subdirectory(Settings)
+add_subdirectory(Terrain)
+add_subdirectory(UI)
+add_subdirectory(Utilities)
+add_subdirectory(Vehicle)
+add_subdirectory(VideoManager)
+add_subdirectory(Viewer3D)
+
+<span class="comment"># All modules linked to main executable</span>
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE QGroundControlModule)</div>
+        </div>
+
+        <h2>5. Custom Build System</h2>
+        <div class="section-card">
+            <h3>Custom Builds (White-labeling)</h3>
+            <p>QGC hỗ trợ custom builds cho third-party modifications. Chỉ cần tạo thư mục <code>custom/</code>.</p>
+
+            <div class="code-block"><span class="comment"># Custom build directory structure:</span>
+custom/
+├── CMakeLists.txt          <span class="comment"># Custom build config</span>
+├── cmake/
+│   └── CustomOverrides.cmake <span class="comment"># Override build options</span>
+├── src/
+│   ├── CustomPlugin.cc     <span class="comment"># Override QGCCorePlugin</span>
+│   ├── CustomOptions.cc    <span class="comment"># Override QGCOptions</span>
+│   └── ...
+├── res/                    <span class="comment"># Custom resources (icons, images)</span>
+└── android/                <span class="comment"># Custom Android config</span>
+
+<span class="comment"># Root CMakeLists.txt auto-detects custom/ directory:</span>
+<span class="keyword">if</span>(IS_DIRECTORY "${CMAKE_SOURCE_DIR}/custom")
+    set(QGC_CUSTOM_BUILD ON)
+    include(CustomOverrides)
+<span class="keyword">endif</span>()</div>
+
+            <div class="tip-box">
+                <h4>💡 Custom Build Use Cases</h4>
+                <ul>
+                    <li>Rebranding: Đổi tên, logo, màu sắc</li>
+                    <li>Feature restriction: Ẩn/hiện tính năng</li>
+                    <li>Custom firmware: Thêm support cho firmware riêng</li>
+                    <li>Enterprise: Thêm authentication, fleet management</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>6. Platform-Specific Build</h2>
+        <div class="section-card">
+            <h3>Windows</h3>
+            <div class="code-block"><span class="comment"># cmake/platform/Windows.cmake</span>
+<span class="comment"># - WIN32 GUI application (no console window)</span>
+<span class="comment"># - OpenSSL bundled for HTTPS</span>
+<span class="comment"># - MSVC runtime configuration</span>
+<span class="comment"># - Windows icon (app.ico) và manifest</span>
+
+<span class="cmd">cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=C:/Qt/6.10.3/msvc2022_64</span>
+<span class="cmd">cmake --build build --parallel</span></div>
+
+            <h3>macOS</h3>
+            <div class="code-block"><span class="comment"># cmake/platform/Apple.cmake</span>
+<span class="comment"># - MACOSX_BUNDLE → .app bundle</span>
+<span class="comment"># - Universal binary: x86_64h + arm64</span>
+<span class="comment"># - Deployment target: configurable</span>
+<span class="comment"># - Code signing for notarization</span>
+
+<span class="cmd">cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DQGC_MACOS_UNIVERSAL_BUILD=ON</span></div>
+
+            <h3>Linux</h3>
+            <div class="code-block"><span class="comment"># cmake/platform/Linux.cmake</span>
+<span class="comment"># - AppImage creation</span>
+<span class="comment"># - Wayland + X11 + EGL support</span>
+<span class="comment"># - Desktop file installation</span>
+
+<span class="cmd">cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DQGC_BUILD_INSTALLER=ON</span></div>
+
+            <h3>Android</h3>
+            <div class="code-block"><span class="comment"># cmake/platform/Android.cmake</span>
+<span class="comment"># - Android SDK/NDK integration</span>
+<span class="comment"># - APK/AAB generation</span>
+<span class="comment"># - Min SDK: configurable (default 26)</span>
+<span class="comment"># - Target SDK: configurable (default 34)</span>
+<span class="comment"># - Gradle build integration</span>
+
+<span class="cmd">cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake \
+  -DANDROID_ABI=arm64-v8a</span></div>
+        </div>
+
+        <h2>7. CI/CD Pipeline</h2>
+        <div class="section-card">
+            <h3>GitHub Actions Workflow</h3>
+            <div class="code-block"><span class="comment"># .github/workflows/ structure:</span>
+workflows/
+├── linux.yml         <span class="comment"># Linux build + test</span>
+├── macos.yml         <span class="comment"># macOS build + test</span>
+├── windows.yml       <span class="comment"># Windows build + test</span>
+├── android.yml       <span class="comment"># Android build</span>
+├── ios.yml           <span class="comment"># iOS build</span>
+├── _detect-changes.yml    <span class="comment"># Skip builds on unrelated PRs</span>
+├── build-results.yml      <span class="comment"># PR comment with build results</span>
+└── build-gstreamer.yml    <span class="comment"># GStreamer SDK builds</span>
+
+<span class="comment"># Shared composite actions:</span>
+actions/
+├── cmake-configure/   <span class="comment"># Consistent CMake options</span>
+├── cmake-build/       <span class="comment"># Build with timing, reviewdog, ccache</span>
+├── run-unit-tests/    <span class="comment"># CTest with JUnit output</span>
+├── detect-changes/    <span class="comment"># Path-based change detection</span>
+├── qt-install/        <span class="comment"># Qt SDK caching</span>
+└── gstreamer/         <span class="comment"># GStreamer from source</span></div>
+        </div>
+
+        <h2>8. Dependencies (CPM)</h2>
+        <div class="section-card">
+            <h3>Package Management</h3>
+            <p>QGC sử dụng <strong>CPM</strong> (CMake Package Manager) cho external dependencies.</p>
+
+            <div class="code-block"><span class="comment"># CPM source cache (avoid re-downloading)</span>
+<span class="comment"># Default: .cache/CPM/ in project root</span>
+<span class="comment"># Or set: $CPM_SOURCE_CACHE environment variable</span>
+
+<span class="comment"># Lock file: build/cpm-package-lock.cmake</span>
+<span class="comment"># Ensures reproducible builds</span>
+
+<span class="comment"># Key dependencies managed by CPM:</span>
+<span class="comment"># - MAVLink C library (message definitions)</span>
+<span class="comment"># - GStreamer (video streaming)</span>
+<span class="comment"># - Various Qt plugins</span></div>
+        </div>
+
+        <h2>9. Testing</h2>
+        <div class="section-card">
+            <h3>Unit Test Framework</h3>
+            <div class="code-block"><span class="comment"># Enable testing:</span>
+<span class="cmd">cmake -B build -DQGC_BUILD_TESTING=ON</span>
+
+<span class="comment"># Run all tests:</span>
+<span class="cmd">cd build && ctest --output-on-failure -L Unit --parallel</span>
+
+<span class="comment"># Test structure mirrors src/:</span>
+test/
+├── ADSB/
+├── AnalyzeView/
+├── Camera/
+├── Comms/           <span class="comment"># MockLink tests</span>
+├── FactSystem/      <span class="comment"># Fact, FactGroup tests</span>
+├── FollowMe/
+├── GPS/
+├── Joystick/
+├── MAVLink/
+├── MissionManager/  <span class="comment"># Mission item tests</span>
+├── QmlControls/
+├── Terrain/
+├── UnitTestFramework/ <span class="comment"># Base test utilities</span>
+├── Utilities/
+└── Vehicle/         <span class="comment"># Vehicle state tests</span>
+
+<span class="comment"># Test base class: UnitTest</span>
+<span class="comment"># - Provides MockLink for simulated vehicle</span>
+<span class="comment"># - Auto-cleanup between tests</span>
+<span class="comment"># - qCCritical calls cause test failures</span></div>
+        </div>
+
+        <h2>10. Development Tools</h2>
+        <div class="section-card">
+            <h3>Available Tools</h3>
+            <table>
+                <tr><th>Tool</th><th>Command</th><th>Mô tả</th></tr>
+                <tr><td>Format</td><td><code>make format</code></td><td>clang-format cho C++</td></tr>
+                <tr><td>Lint</td><td><code>make lint</code></td><td>Pre-commit hooks (format + analysis)</td></tr>
+                <tr><td>Analyze</td><td><code>make analyze</code></td><td>clang-tidy static analysis</td></tr>
+                <tr><td>Coverage</td><td><code>make coverage</code></td><td>Code coverage report</td></tr>
+                <tr><td>Docs</td><td><code>make docs</code></td><td>Doxygen API documentation</td></tr>
+                <tr><td>Clean</td><td><code>make clean</code></td><td>Remove build artifacts</td></tr>
+                <tr><td>Run</td><td><code>make run</code></td><td>Build and run application</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        <p>QGroundControl Build System Documentation</p>
+    </footer>
+</body>
+</html>

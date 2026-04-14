@@ -18,10 +18,10 @@ Button {
     focusPolicy: Qt.ClickFocus
     checkable: true
 
-    property bool primary: false ///< primary button for a group of buttons
-    property real pointSize: ScreenTools.defaultFontPointSize ///< Point size for button text
-    property bool showBorder: qgcPal.globalTheme === QGCPalette.Light
-    property real backRadius: ScreenTools.defaultBorderRadius
+    property bool primary: false
+    property real pointSize: ScreenTools.defaultFontPointSize
+    property bool showBorder: false
+    property real backRadius: DJIStyle.radiusSM
     property real heightFactor: 0.5
 
     property bool _showSeparator: false
@@ -36,10 +36,19 @@ Button {
         id: backRect
         implicitWidth: ScreenTools.implicitButtonWidth
         implicitHeight: ScreenTools.implicitButtonHeight
-        //radius: backRadius
         border.width: showBorder ? 1 : 0
         border.color: qgcPal.buttonBorder
-        color: _showHighlight ? qgcPal.buttonHighlight : qgcPal.button
+        color: _showHighlight ? DJIStyle.accentColor : qgcPal.button
+
+        // Active tab bottom accent line
+        Rectangle {
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 2
+            color: DJIStyle.accentColor
+            visible: _showHighlight
+        }
 
         Rectangle {
             anchors.right: parent.right
@@ -48,10 +57,14 @@ Button {
             anchors.topMargin: _vertMargin
             anchors.bottomMargin: _vertMargin
             width: 1
-            color: Qt.darker(qgcPal.buttonText, 1.5)
+            color: DJIStyle.dividerColor
             visible: control._showSeparator
 
             property real _vertMargin: ScreenTools.defaultFontPixelHeight * 0.25
+        }
+
+        Behavior on color {
+            ColorAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
         }
     }
 

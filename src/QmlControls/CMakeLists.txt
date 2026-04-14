@@ -81,6 +81,10 @@ set_source_files_properties(ScreenTools.qml PROPERTIES
     QT_QML_SINGLETON_TYPE TRUE
 )
 
+set_source_files_properties(DJIStyle.qml PROPERTIES
+    QT_QML_SINGLETON_TYPE TRUE
+)
+
 qt_add_qml_module(QGroundControlControlsModule
     URI QGroundControl.Controls
     VERSION 1.0
@@ -88,6 +92,7 @@ qt_add_qml_module(QGroundControlControlsModule
     QML_FILES
         AltFrameCombo.qml
         AltFrameDialog.qml
+        DJIStyle.qml
         AppSettings.qml
         APMSubMotorDisplay.qml
         AppLogging.qml

@@ -19,9 +19,11 @@ Item {
         id:         backgroundRect
         width:      control.width + extraWidth
         height:     control.height
-        color:      qgcPal.window
-        radius:     ScreenTools.defaultFontPixelWidth / 2
-        opacity:    0.75
+        color:      DJIStyle.hudBackground
+        radius:     DJIStyle.cardRadius
+        opacity:    DJIStyle.hudOpacity
+        border.width: DJIStyle.hudBorderWidth
+        border.color: DJIStyle.hudBorder
     }
 
     ColumnLayout {

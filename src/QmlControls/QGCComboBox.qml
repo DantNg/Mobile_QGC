@@ -113,15 +113,23 @@ T.ComboBox {
 
     background: Rectangle {
         color: qgcPal.button
-        border.color: qgcPal.buttonBorder
-        border.width: _showBorder ? 1 : 0
-        radius: ScreenTools.defaultBorderRadius
+        border.color: control.activeFocus ? DJIStyle.accentColor : DJIStyle.inputBorder
+        border.width: 1
+        radius: DJIStyle.inputRadius
 
         Rectangle {
             anchors.fill: parent
             color: qgcPal.buttonHighlight
-            opacity: _showHighlight ? 1 : control.enabled && control.hovered ? .2 : 0
+            opacity: _showHighlight ? 1 : control.enabled && control.hovered ? 0.08 : 0
             radius: parent.radius
+
+            Behavior on opacity {
+                NumberAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
+            }
+        }
+
+        Behavior on border.color {
+            ColorAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
         }
     }
 
@@ -145,19 +153,25 @@ T.ComboBox {
             currentIndex: control.highlightedIndex
             highlightMoveDuration: 0
 
-            Rectangle {
-                z: 10
-                width: parent.width
-                height: parent.height
-                color: "transparent"
-                border.color: qgcPal.text
-            }
-
             T.ScrollIndicator.vertical: ScrollIndicator { }
         }
 
         background: Rectangle {
-            color: qgcPal.window
+            color: DJIStyle.elevatedSurface
+            radius: DJIStyle.inputRadius
+            border.color: DJIStyle.borderColor
+            border.width: 1
+
+            // Soft shadow effect
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: -1
+                z: -1
+                radius: parent.radius + 1
+                color: "transparent"
+                border.color: DJIStyle.shadowColor
+                border.width: 2
+            }
         }
     }
 }

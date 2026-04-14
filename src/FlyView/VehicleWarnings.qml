@@ -7,8 +7,10 @@ Rectangle {
     anchors.margins:    -ScreenTools.defaultFontPixelHeight
     height:             warningsCol.height
     width:              warningsCol.width
-    color:              Qt.rgba(1, 1, 1, 0.5)
-    radius:             ScreenTools.defaultFontPixelWidth / 2
+    color:              DJIStyle.overlayBackground
+    radius:             DJIStyle.cardRadius
+    border.width:       1
+    border.color:       DJIStyle.statusRed
     visible:            _noGPSLockVisible || _prearmErrorVisible
 
     property var  _activeVehicle:       QGroundControl.multiVehicleManager.activeVehicle
@@ -22,7 +24,7 @@ Rectangle {
         QGCLabel {
             anchors.horizontalCenter:   parent.horizontalCenter
             visible:                    _noGPSLockVisible
-            color:                      "black"
+            color:                      DJIStyle.statusRed
             font.pointSize:             ScreenTools.largeFontPointSize
             text:                       qsTr("No GPS Lock for Vehicle")
         }
@@ -30,7 +32,7 @@ Rectangle {
         QGCLabel {
             anchors.horizontalCenter:   parent.horizontalCenter
             visible:                    _prearmErrorVisible
-            color:                      "black"
+            color:                      DJIStyle.statusRed
             font.pointSize:             ScreenTools.largeFontPointSize
             text:                       _activeVehicle ? _activeVehicle.prearmError : ""
         }
@@ -41,7 +43,7 @@ Rectangle {
             width:                      ScreenTools.defaultFontPixelWidth * 50
             horizontalAlignment:        Text.AlignHCenter
             wrapMode:                   Text.WordWrap
-            color:                      "black"
+            color:                      DJIStyle.textPrimary
             font.pointSize:             ScreenTools.largeFontPointSize
             text:                       qsTr("The vehicle has failed a pre-arm check. In order to arm the vehicle, resolve the failure.")
         }

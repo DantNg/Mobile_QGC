@@ -1,6 +1,7 @@
 import QtQuick
+import QGroundControl.Controls
 
 Rectangle {
     anchors.fill:               parent
-    color:                      Qt.rgba(0,0,0,0.75)
+    color:                      DJIStyle.overlayBackground
 }

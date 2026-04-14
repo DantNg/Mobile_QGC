@@ -11,10 +11,12 @@ Rectangle {
     id:             topRightPanel
     width:          contentWidth
     height:         Math.max(contentHeight, minimumHeight)
-    color:          qgcPal.toolbarBackground
-    radius:         ScreenTools.defaultFontPixelHeight / 2
+    color:          DJIStyle.overlayBackground
+    radius:         DJIStyle.cardRadius
     visible:        !QGroundControl.videoManager.fullScreen && _multipleVehicles && _settingEnableMVPanel
     clip:           true
+    border.width:   DJIStyle.hudBorderWidth
+    border.color:   DJIStyle.hudBorder
 
     property bool _settingEnableMVPanel:    QGroundControl.settingsManager.appSettings.enableMultiVehiclePanel.value
     property bool  _multipleVehicles:       QGroundControl.multiVehicleManager.vehicles.count > 1

@@ -53,16 +53,17 @@ Item {
                 anchors.centerIn:   parent
                 width:              noVideoLabel.contentWidth + ScreenTools.defaultFontPixelHeight
                 height:             noVideoLabel.contentHeight + ScreenTools.defaultFontPixelHeight
-                radius:             ScreenTools.defaultFontPixelWidth / 2
-                color:              "black"
-                opacity:            0.5
+                radius:             DJIStyle.cardRadius
+                color:              DJIStyle.overlayBackground
+                border.width:       DJIStyle.hudBorderWidth
+                border.color:       DJIStyle.hudBorder
             }
 
             QGCLabel {
                 id:                 noVideoLabel
                 text:               QGroundControl.settingsManager.videoSettings.streamEnabled.rawValue ? qsTr("WAITING FOR VIDEO") : qsTr("VIDEO DISABLED")
                 font.bold:          true
-                color:              "white"
+                color:              DJIStyle.textPrimary
                 font.pointSize:     useSmallFont ? ScreenTools.smallFontPointSize : ScreenTools.largeFontPointSize
                 anchors.centerIn:   parent
             }
@@ -71,7 +72,7 @@ Item {
     Rectangle {
         id:             videoBackground
         anchors.fill:   parent
-        color:          "black"
+        color:          DJIStyle.backgroundColor
         visible:        _showStreamLoader || _showUvcLoader
         function getWidth() {
             if(_ar != 0.0){
@@ -171,25 +172,25 @@ Item {
                 visible:        _showGrid && !QGroundControl.videoManager.fullScreen
 
                 Rectangle {
-                    color:  Qt.rgba(1,1,1,0.5)
+                    color:  DJIStyle.withOpacity(DJIStyle.textPrimary, 0.4)
                     height: parent.height
                     width:  1
                     x:      parent.width * 0.33
                 }
                 Rectangle {
-                    color:  Qt.rgba(1,1,1,0.5)
+                    color:  DJIStyle.withOpacity(DJIStyle.textPrimary, 0.4)
                     height: parent.height
                     width:  1
                     x:      parent.width * 0.66
                 }
                 Rectangle {
-                    color:  Qt.rgba(1,1,1,0.5)
+                    color:  DJIStyle.withOpacity(DJIStyle.textPrimary, 0.4)
                     width:  parent.width
                     height: 1
                     y:      parent.height * 0.33
                 }
                 Rectangle {
-                    color:  Qt.rgba(1,1,1,0.5)
+                    color:  DJIStyle.withOpacity(DJIStyle.textPrimary, 0.4)
                     width:  parent.width
                     height: 1
                     y:      parent.height * 0.66

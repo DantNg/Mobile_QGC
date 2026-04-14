@@ -26,6 +26,21 @@ Item {
 
     QGCPalette { id: qgcPal }
 
+    // Modern semi-transparent toolbar background
+    Rectangle {
+        anchors.fill: parent
+        color: DJIStyle.toolbarBackground
+        // Subtle bottom border line
+        Rectangle {
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 1
+            color: DJIStyle.dividerColor
+            opacity: 0.5
+        }
+    }
+
     QGCFlickable {
         anchors.fill:       parent
         contentWidth:       toolBarLayout.width
@@ -41,27 +56,26 @@ Item {
                 width:  leftPanelLayout.implicitWidth
                 height: parent.height
 
-                // Gradient background behind Q button and main status indicator
+                // Modern gradient background behind Q button and main status indicator
                 Rectangle {
                     id:         gradientBackground
                     height:     parent.height
                     width:      mainStatusLayout.width
-                    opacity:    qgcPal.windowTransparent.a
+                    opacity:    0.9
 
                     gradient: Gradient {
                         orientation: Gradient.Horizontal
                         GradientStop { position: 0; color: _mainStatusBGColor }
-                        //GradientStop { position: qgcButton.x + qgcButton.width; color: _mainStatusBGColor }
-                        GradientStop { position: 1; color: qgcPal.window }
+                        GradientStop { position: 1; color: "transparent" }
                     }
                 }
 
-                // Standard toolbar background to the right of the gradient
+                // Transparent fill to the right of the gradient
                 Rectangle {
                     anchors.left:   gradientBackground.right
                     anchors.right:  parent.right
                     height:         parent.height
-                    color:          qgcPal.windowTransparent
+                    color:          "transparent"
                 }
 
                 RowLayout {
@@ -109,7 +123,13 @@ Item {
 
                 Rectangle {
                     anchors.fill:   parent
-                    color:          qgcPal.windowTransparent
+                    color:          "transparent"
+                }
+
+                // DJI-style "Safe to fly (GPS)" status badge
+                DJIStatusBadge {
+                    anchors.centerIn:       parent
+                    visible:                !guidedActionConfirm.visible
                 }
 
                 GuidedActionConfirm {
@@ -129,7 +149,7 @@ Item {
 
                 Rectangle {
                     anchors.fill:   parent
-                    color:          qgcPal.windowTransparent
+                    color:          "transparent"
                 }
 
                 FlyViewToolBarIndicators {
@@ -149,8 +169,10 @@ Item {
         x:                          control.mapFromItem(guidedActionConfirm.parent, guidedActionConfirm.x, 0).x + (guidedActionConfirm.width - guidedActionMessageDisplay.width) / 2
         width:                      messageLabel.contentWidth + (_margins * 2)
         height:                     messageLabel.contentHeight + (_margins * 2)
-        color:                      qgcPal.windowTransparent
-        radius:                     ScreenTools.defaultBorderRadius
+        color:                      DJIStyle.overlayBackground
+        radius:                     DJIStyle.cardRadius
+        border.width:               DJIStyle.hudBorderWidth
+        border.color:               DJIStyle.hudBorder
         visible:                    guidedActionConfirm.visible
 
         QGCLabel {

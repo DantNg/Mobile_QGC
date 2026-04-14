@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QML & UI System - QGroundControl</title>
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+        .header { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #06b6d4 100%); color: white; padding: 40px; text-align: center; }
+        .header h1 { font-size: 2.2rem; font-weight: 800; }
+        .header p { opacity: 0.9; margin-top: 8px; }
+        nav { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 40px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        nav ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        nav a { color: var(--primary); text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 500; font-size: 0.95rem; }
+        nav a:hover { background: #eff6ff; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+        h2 { font-size: 1.6rem; font-weight: 700; margin: 40px 0 16px; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+        h3 { font-size: 1.15rem; margin: 20px 0 10px; }
+        h4 { margin: 14px 0 6px; }
+        p { margin-bottom: 10px; }
+        ul, ol { margin-left: 24px; margin-bottom: 14px; }
+        li { margin-bottom: 4px; }
+        .code-block {
+            background: #1e293b; color: #e2e8f0; border-radius: 12px; padding: 20px 24px;
+            font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.88rem;
+            overflow-x: auto; margin: 14px 0; line-height: 1.6; white-space: pre;
+        }
+        .comment { color: #64748b; }
+        .keyword { color: #93c5fd; }
+        .type { color: #67e8f9; }
+        .string { color: #86efac; }
+        .prop { color: #fbbf24; }
+        .section-card {
+            background: var(--card-bg); border: 2px solid var(--border); border-radius: 16px;
+            padding: 28px; margin: 24px 0;
+        }
+        .section-card:hover { border-color: var(--primary); }
+        .section-card h3 { margin-top: 0; color: var(--primary); font-size: 1.3rem; }
+        table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+        th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; font-size: 0.93rem; }
+        th { background: #eff6ff; font-weight: 600; }
+        code { background: #eff6ff; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+        .info-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 18px; margin: 14px 0; }
+        .info-box h4 { color: var(--primary); margin-bottom: 6px; }
+        .warn-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 18px; margin: 14px 0; }
+        .warn-box h4 { color: #d97706; margin-bottom: 6px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+        .grid-2 > div { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 14px 0; }
+        .grid-3 > div { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px; text-align: center; font-size: 0.9rem; }
+        footer { text-align: center; padding: 30px; color: var(--text-muted); border-top: 1px solid var(--border); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎨 QML & UI System</h1>
+        <p>QML/C++ Integration, Custom Controls, Theming, và UI Architecture</p>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="index.html">🏠 Tổng quan</a></li>
+            <li><a href="architecture.html">🏗️ Kiến trúc</a></li>
+            <li><a href="design-patterns.html">🧩 Design Patterns</a></li>
+            <li><a href="core-modules.html">⚙️ Core Modules</a></li>
+            <li><a href="communication.html">📡 Communication</a></li>
+            <li><a href="build-system.html">🔨 Build System</a></li>
+            <li><a href="qml-ui.html">🎨 QML & UI</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+
+        <h2>1. QML/C++ Integration Architecture</h2>
+        <p>QGC sử dụng QML cho toàn bộ UI, với C++ backend expose qua Qt's meta-object system.</p>
+
+        <div class="section-card">
+            <h3>1.1 C++ → QML Exposure</h3>
+            <div class="code-block"><span class="comment">// 3 cách expose C++ class cho QML:</span>
+
+<span class="comment">// 1. QML_ELEMENT - Creatable trong QML</span>
+<span class="keyword">class</span> <span class="type">MyWidget</span> : <span class="keyword">public</span> <span class="type">QQuickItem</span> {
+    Q_OBJECT
+    <span class="keyword">QML_ELEMENT</span>    <span class="comment">// QML: MyWidget { }</span>
+};
+
+<span class="comment">// 2. QML_SINGLETON - Singleton access</span>
+<span class="keyword">class</span> <span class="type">QGroundControl</span> : <span class="keyword">public</span> <span class="type">QObject</span> {
+    Q_OBJECT
+    <span class="keyword">QML_SINGLETON</span>  <span class="comment">// QML: QGroundControl.multiVehicleManager</span>
+};
+
+<span class="comment">// 3. QML_UNCREATABLE - Chỉ từ C++, không tạo trong QML</span>
+<span class="keyword">class</span> <span class="type">Vehicle</span> : <span class="keyword">public</span> <span class="type">FactGroup</span> {
+    Q_OBJECT
+    <span class="keyword">QML_UNCREATABLE</span>(<span class="string">""</span>)  <span class="comment">// Chỉ truy cập qua property</span>
+};</div>
+
+            <h4>Q_PROPERTY System:</h4>
+            <div class="code-block"><span class="comment">// Q_PROPERTY = Reactive data binding C++ → QML</span>
+<span class="comment">// Khi NOTIFY signal phát → QML tự động re-render</span>
+
+<span class="keyword">class</span> <span class="type">Vehicle</span> {
+    <span class="comment">// Read-Write property</span>
+    Q_PROPERTY(<span class="keyword">bool</span> <span class="prop">armed</span> READ armed WRITE setArmed NOTIFY armedChanged)
+    
+    <span class="comment">// Read-Only property</span>
+    Q_PROPERTY(QString <span class="prop">flightMode</span> READ flightMode NOTIFY flightModeChanged)
+    
+    <span class="comment">// Constant property (never changes)</span>
+    Q_PROPERTY(<span class="type">ParameterManager</span>* <span class="prop">parameterManager</span> READ parameterManager CONSTANT)
+    
+    <span class="comment">// Method callable từ QML</span>
+    Q_INVOKABLE <span class="keyword">void</span> guidedModeTakeoff(<span class="keyword">double</span> altitude);
+};
+
+<span class="comment">// QML usage - TỰ ĐỘNG reactive:</span>
+<span class="comment">// QGCLabel { text: vehicle.flightMode }  // Auto-updates khi mode thay đổi!</span>
+<span class="comment">// QGCButton { onClicked: vehicle.guidedModeTakeoff(10) }</span></div>
+        </div>
+
+        <h2>2. UI Views Chính</h2>
+        <div class="section-card">
+            <h3>Application Layout</h3>
+            <div class="code-block">
+┌───────────────────────────────────────────────────────────┐
+│ <span class="type">Toolbar</span>                                                   │
+│ [🏠 FlyView] [📋 PlanView] [📊 AnalyzeView] [⚙️ Setup]  │
+│ Vehicle indicators: Battery │ GPS │ RC │ Mode │ Armed     │
+├───────────────────────────────────────────────────────────┤
+│                                                           │
+│                    <span class="type">Main Content Area</span>                      │
+│                                                           │
+│  ┌─ <span class="keyword">FlyView</span> ──────────────────────────────────────────┐  │
+│  │ ┌──────────────┐  ┌────────────────────────────┐  │  │
+│  │ │   Map View    │  │    HUD / Attitude          │  │  │
+│  │ │  (vehicle     │  │    Compass                 │  │  │
+│  │ │   tracking,   │  │    Altitude bar            │  │  │
+│  │ │   mission     │  │    Speed bar               │  │  │
+│  │ │   path)       │  │    Flight mode             │  │  │
+│  │ └──────────────┘  └────────────────────────────┘  │  │
+│  │ ┌──────────────────────────────────────────────┐  │  │
+│  │ │  Guided Actions: Takeoff │ Land │ RTL │ Pause│  │  │
+│  │ └──────────────────────────────────────────────┘  │  │
+│  └────────────────────────────────────────────────────┘  │
+│                                                           │
+│  ┌─ <span class="keyword">PlanView</span> ─────────────────────────────────────────┐  │
+│  │ ┌──────────────┐  ┌────────────────────────────┐  │  │
+│  │ │   Map View    │  │    Mission Item Editor     │  │  │
+│  │ │  (waypoints,  │  │    - Waypoint details      │  │  │
+│  │ │   survey area,│  │    - Survey settings       │  │  │
+│  │ │   geofence)   │  │    - Landing pattern       │  │  │
+│  │ └──────────────┘  └────────────────────────────┘  │  │
+│  │  Mission list: [Takeoff] [WP1] [WP2] [Survey] [Land] │  │
+│  └────────────────────────────────────────────────────┘  │
+│                                                           │
+└───────────────────────────────────────────────────────────┘</div>
+        </div>
+
+        <h2>3. Custom QML Controls Library</h2>
+        <p>QGC có thư viện 100+ custom QML controls. Tất cả đều prefix <code>QGC</code> và tuân thủ theming system.</p>
+
+        <h3>3.1 Basic Controls</h3>
+        <div class="grid-3">
+            <div>QGCButton</div>
+            <div>QGCLabel</div>
+            <div>QGCTextField</div>
+            <div>QGCCheckBox</div>
+            <div>QGCRadioButton</div>
+            <div>QGCComboBox</div>
+            <div>QGCSlider</div>
+            <div>QGCSwitch</div>
+            <div>QGCSpinBox</div>
+            <div>QGCRoundButton</div>
+            <div>QGCDelayButton</div>
+            <div>QGCToolBarButton</div>
+        </div>
+
+        <h3>3.2 Layout Controls</h3>
+        <div class="grid-3">
+            <div>QGCGroupBox</div>
+            <div>QGCListView</div>
+            <div>QGCSwipeView</div>
+            <div>QGCPopupDialog</div>
+            <div>QGCFileDialog</div>
+            <div>QGCFlickable</div>
+            <div>MvPanelPage</div>
+            <div>QGCTabBar</div>
+            <div>QGCScrollBar</div>
+        </div>
+
+        <h3>3.3 Specialized Controls</h3>
+        <div class="grid-3">
+            <div>QGCMapCircle</div>
+            <div>QGCMapPolygon</div>
+            <div>QGCMapPolyline</div>
+            <div>FactValueGrid</div>
+            <div>InstrumentValue</div>
+            <div>ToolIndicatorPage</div>
+            <div>PreFlightCheckModel</div>
+            <div>FlightPathSegment</div>
+            <div>QGCGeoBoundingCube</div>
+        </div>
+
+        <h2>4. Theming System</h2>
+
+        <div class="section-card">
+            <h3>4.1 QGCPalette (Color Theming)</h3>
+            <div class="code-block"><span class="comment">// QGCPalette.cc - Central color management</span>
+<span class="comment">// Hỗ trợ Light và Dark themes</span>
+<span class="comment">// TUYỆT ĐỐI KHÔNG hardcode colors trong QML!</span>
+
+<span class="comment">// QML usage:</span>
+<span class="keyword">import</span> QGroundControl.Palette
+
+Item {
+    <span class="type">QGCPalette</span> { <span class="prop">id</span>: qgcPal }
+    
+    Rectangle {
+        <span class="prop">color</span>: qgcPal.window           <span class="comment">// Background color</span>
+    }
+    
+    <span class="type">QGCLabel</span> {
+        <span class="prop">color</span>: qgcPal.text              <span class="comment">// Text color</span>
+    }
+    
+    <span class="type">QGCButton</span> {
+        <span class="comment">// Button tự động sử dụng palette</span>
+        <span class="comment">// Không cần set color manually</span>
+    }
+}
+
+<span class="comment">// Available palette colors:</span>
+<span class="comment">// qgcPal.window          - Window background</span>
+<span class="comment">// qgcPal.windowShade     - Slightly different shade</span>
+<span class="comment">// qgcPal.windowShadeDark - Darker shade</span>
+<span class="comment">// qgcPal.text            - Normal text</span>
+<span class="comment">// qgcPal.warningText     - Warning text</span>
+<span class="comment">// qgcPal.button          - Button background</span>
+<span class="comment">// qgcPal.buttonHighlight - Button hover</span>
+<span class="comment">// qgcPal.buttonText      - Button text</span>
+<span class="comment">// qgcPal.primaryButton   - Primary action button</span>
+<span class="comment">// qgcPal.mapButton       - Map overlay button</span>
+<span class="comment">// qgcPal.alertBackground - Alert/error background</span>
+<span class="comment">// ... many more</span></div>
+        </div>
+
+        <div class="section-card">
+            <h3>4.2 ScreenTools (Responsive Sizing)</h3>
+            <div class="code-block"><span class="comment">// ScreenTools.qml - DPI-aware sizing</span>
+<span class="comment">// TUYỆT ĐỐI KHÔNG hardcode pixel values!</span>
+
+<span class="comment">// QML usage:</span>
+<span class="keyword">import</span> QGroundControl.ScreenTools
+
+Item {
+    <span class="comment">// Font-relative sizing:</span>
+    <span class="prop">width</span>:  ScreenTools.defaultFontPixelWidth * 30    <span class="comment">// ~30 characters wide</span>
+    <span class="prop">height</span>: ScreenTools.defaultFontPixelHeight * 2    <span class="comment">// ~2 lines tall</span>
+    
+    <span class="comment">// Standard margins:</span>
+    <span class="prop">margins</span>: ScreenTools.defaultFontPixelWidth
+    
+    <span class="comment">// Font sizes:</span>
+    <span class="type">QGCLabel</span> {
+        <span class="prop">font.pointSize</span>: ScreenTools.defaultFontPointSize     <span class="comment">// Normal</span>
+    }
+    <span class="type">QGCLabel</span> {
+        <span class="prop">font.pointSize</span>: ScreenTools.largeFontPointSize       <span class="comment">// Large</span>
+    }
+    <span class="type">QGCLabel</span> {
+        <span class="prop">font.pointSize</span>: ScreenTools.smallFontPointSize       <span class="comment">// Small</span>
+    }
+    
+    <span class="comment">// Mobile detection:</span>
+    <span class="prop">visible</span>: ScreenTools.isMobile ? false : true
+}
+
+<span class="comment">// Key ScreenTools properties:</span>
+<span class="comment">// defaultFontPixelWidth   - Width of one character</span>
+<span class="comment">// defaultFontPixelHeight  - Height of one line</span>
+<span class="comment">// defaultFontPointSize    - Base font size</span>
+<span class="comment">// largeFontPointSize      - Large font</span>
+<span class="comment">// smallFontPointSize      - Small font</span>
+<span class="comment">// isMobile               - Mobile platform detection</span>
+<span class="comment">// isAndroid, isiOS        - Platform checks</span></div>
+        </div>
+
+        <h2>5. QML File Structure Convention</h2>
+        <div class="section-card">
+            <h3>Standard QML File Layout</h3>
+            <div class="code-block"><span class="keyword">import</span> QtQuick
+<span class="keyword">import</span> QtQuick.Controls
+<span class="keyword">import</span> QtQuick.Layouts
+
+<span class="keyword">import</span> QGroundControl
+<span class="keyword">import</span> QGroundControl.Controls
+<span class="keyword">import</span> QGroundControl.ScreenTools
+<span class="keyword">import</span> QGroundControl.Palette
+
+<span class="type">Item</span> {
+    <span class="prop">id</span>: root
+
+    <span class="comment">// 1. Kích thước & anchors</span>
+    <span class="prop">width</span>:  ScreenTools.defaultFontPixelHeight * 10
+    <span class="prop">height</span>: ScreenTools.defaultFontPixelHeight * 5
+
+    <span class="comment">// 2. Public properties</span>
+    <span class="keyword">property var</span>  <span class="prop">vehicle</span>:     QGroundControl.multiVehicleManager.activeVehicle
+    <span class="keyword">property int</span>  <span class="prop">myProperty</span>:  0
+
+    <span class="comment">// 3. Private properties (underscore prefix)</span>
+    <span class="keyword">readonly property bool</span> <span class="prop">_isValid</span>:     vehicle !== null
+    <span class="keyword">readonly property real</span> <span class="prop">_margins</span>:     ScreenTools.defaultFontPixelWidth
+
+    <span class="comment">// 4. Palette</span>
+    <span class="type">QGCPalette</span> { <span class="prop">id</span>: qgcPal }
+
+    <span class="comment">// 5. Signals</span>
+    <span class="keyword">signal</span> clicked()
+
+    <span class="comment">// 6. Functions</span>
+    <span class="keyword">function</span> doSomething() {
+        <span class="comment">// logic</span>
+    }
+
+    <span class="comment">// 7. Visual children</span>
+    <span class="type">ColumnLayout</span> {
+        <span class="prop">anchors.fill</span>: parent
+        <span class="prop">spacing</span>:      _margins
+
+        <span class="type">QGCLabel</span> {
+            <span class="prop">text</span>: _isValid ? vehicle.flightMode : qsTr(<span class="string">"No Vehicle"</span>)
+        }
+
+        <span class="type">QGCButton</span> {
+            <span class="prop">text</span>: qsTr(<span class="string">"Click Me"</span>)   <span class="comment">// qsTr() for i18n!</span>
+            <span class="prop">onClicked</span>: root.clicked()
+        }
+    }
+
+    <span class="comment">// 8. Connections (Qt6 function syntax)</span>
+    <span class="type">Connections</span> {
+        <span class="prop">target</span>: vehicle
+        <span class="keyword">function</span> onArmedChanged() {
+            console.log(<span class="string">"Armed state changed"</span>)
+        }
+    }
+
+    <span class="comment">// 9. Component.onCompleted</span>
+    Component.onCompleted: {
+        <span class="comment">// initialization</span>
+    }
+}</div>
+        </div>
+
+        <h2>6. Fact-Based UI</h2>
+        <div class="section-card">
+            <h3>Fact → UI Binding</h3>
+            <p>Fact System cho phép tạo UI từ metadata - không cần viết code cho mỗi parameter.</p>
+
+            <div class="code-block"><span class="comment">// FactTextField - Auto-binding text field cho Fact</span>
+<span class="type">FactTextField</span> {
+    <span class="prop">fact</span>: vehicle.parameterManager.getParameter(-1, <span class="string">"PARAM_NAME"</span>)
+    <span class="comment">// Tự động:</span>
+    <span class="comment">// - Hiện giá trị hiện tại</span>
+    <span class="comment">// - Validate input theo min/max</span>
+    <span class="comment">// - Convert units</span>
+    <span class="comment">// - Gửi lên vehicle khi user thay đổi</span>
+}
+
+<span class="comment">// FactComboBox - Dropdown cho enum parameters</span>
+<span class="type">FactComboBox</span> {
+    <span class="prop">fact</span>: mySetting
+    <span class="comment">// Tự động populate từ enumStrings/enumValues</span>
+}
+
+<span class="comment">// FactValueGrid - Dashboard grid cho telemetry</span>
+<span class="type">FactValueGrid</span> {
+    <span class="comment">// User-customizable grid of Fact values</span>
+    <span class="comment">// Drag & drop reorder</span>
+    <span class="comment">// Auto-refresh from vehicle telemetry</span>
+}
+
+<span class="comment">// InstrumentValue - Single telemetry display</span>
+<span class="type">InstrumentValue</span> {
+    <span class="prop">fact</span>: vehicle.gps.lat
+    <span class="comment">// Shows: label, value, units, icon</span>
+}</div>
+        </div>
+
+        <h2>7. Map Integration</h2>
+        <div class="section-card">
+            <h3>Qt Location + Custom Overlays</h3>
+            <div class="code-block"><span class="comment">// QGC sử dụng Qt Location cho map rendering</span>
+<span class="comment">// Custom map overlays:</span>
+
+<span class="type">QGCMapPolygon</span>    <span class="comment">// Interactive polygon (survey areas, geofence)</span>
+<span class="type">QGCMapPolyline</span>   <span class="comment">// Interactive polyline (corridor scan)</span>
+<span class="type">QGCMapCircle</span>     <span class="comment">// Interactive circle (orbit, geofence)</span>
+
+<span class="comment">// Map providers configured via FlightMapSettings:</span>
+<span class="comment">// - Bing Maps</span>
+<span class="comment">// - Google Maps</span>
+<span class="comment">// - Mapbox</span>
+<span class="comment">// - OpenStreetMap</span>
+<span class="comment">// - Custom tile servers</span>
+
+<span class="comment">// Offline maps: OfflineMapsSettings</span>
+<span class="comment">// Download map tiles for offline use</span></div>
+        </div>
+
+        <h2>8. Golden Rules Cho QML Development</h2>
+
+        <div class="warn-box">
+            <h4>⚠️ KHÔNG BAO GIỜ</h4>
+            <ul>
+                <li><strong>Hardcode sizes:</strong> Dùng <code>ScreenTools.defaultFontPixelHeight/Width</code></li>
+                <li><strong>Hardcode colors:</strong> Dùng <code>QGCPalette</code></li>
+                <li><strong>Dùng Qt controls trực tiếp:</strong> Dùng QGC controls (QGCButton, QGCLabel, ...)</li>
+                <li><strong>Bỏ qsTr():</strong> Tất cả user-visible strings phải wrap bằng <code>qsTr()</code></li>
+                <li><strong>Quên null-check vehicle:</strong> Luôn kiểm tra <code>vehicle !== null</code></li>
+                <li><strong>Dùng Connections syntax cũ:</strong> Dùng <code>function onSignal() {}</code> thay vì <code>onSignal: {}</code></li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <h4>✅ LUÔN LUÔN</h4>
+            <ul>
+                <li>Dùng <code>ScreenTools</code> cho mọi sizing</li>
+                <li>Dùng <code>QGCPalette</code> cho mọi colors</li>
+                <li>Dùng QGC custom controls thay vì Qt controls</li>
+                <li>Wrap strings với <code>qsTr()</code> cho i18n</li>
+                <li>Null-check <code>activeVehicle</code> trước khi sử dụng</li>
+                <li>Dùng Qt6 Connections syntax: <code>function onSignalName() {}</code></li>
+                <li>Đẩy logic phức tạp về C++ (Q_INVOKABLE methods)</li>
+                <li>Follow file structure convention (imports → id → sizes → properties → children)</li>
+            </ul>
+        </div>
+
+        <h2>9. QML Module Registration</h2>
+        <div class="code-block"><span class="comment">// QML imports available trong QGC:</span>
+<span class="keyword">import</span> QGroundControl                  <span class="comment">// Main singleton</span>
+<span class="keyword">import</span> QGroundControl.Controls          <span class="comment">// QGCButton, QGCLabel, ...</span>
+<span class="keyword">import</span> QGroundControl.ScreenTools       <span class="comment">// Sizing utilities</span>
+<span class="keyword">import</span> QGroundControl.Palette           <span class="comment">// Color theming</span>
+<span class="keyword">import</span> QGroundControl.FlightMap         <span class="comment">// Map components</span>
+<span class="keyword">import</span> QGroundControl.FlightDisplay     <span class="comment">// HUD components</span>
+<span class="keyword">import</span> QGroundControl.Vehicle           <span class="comment">// Vehicle types</span>
+<span class="keyword">import</span> QGroundControl.MultiVehicleManager <span class="comment">// Vehicle management</span>
+<span class="keyword">import</span> QGroundControl.AutoPilotPlugin   <span class="comment">// Setup components</span>
+<span class="keyword">import</span> QGroundControl.FactSystem        <span class="comment">// Fact types</span>
+<span class="keyword">import</span> QGroundControl.FactControls      <span class="comment">// Fact UI controls</span>
+<span class="keyword">import</span> QGroundControl.Controllers       <span class="comment">// Mission controllers</span></div>
+    </div>
+
+    <footer>
+        <p>QGroundControl QML & UI System Documentation</p>
+    </footer>
+</body>
+</html>

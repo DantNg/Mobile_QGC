@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiến Trúc Tổng Thể - QGroundControl</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+            color: white; padding: 40px; text-align: center;
+        }
+        .header h1 { font-size: 2.2rem; font-weight: 800; }
+        .header p { opacity: 0.9; margin-top: 8px; }
+        nav { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 40px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        nav ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        nav a { color: var(--primary); text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 500; transition: all 0.2s; font-size: 0.95rem; }
+        nav a:hover { background: #eff6ff; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+        h2 { font-size: 1.6rem; font-weight: 700; margin: 40px 0 16px; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+        h3 { font-size: 1.2rem; margin: 24px 0 12px; }
+        p { margin-bottom: 12px; }
+        .code-block {
+            background: #1e293b; color: #e2e8f0; border-radius: 12px; padding: 20px 24px;
+            font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.88rem;
+            overflow-x: auto; margin: 16px 0; line-height: 1.6;
+        }
+        .code-block .comment { color: #64748b; }
+        .code-block .keyword { color: #7dd3fc; }
+        .code-block .string { color: #86efac; }
+        .code-block .folder { color: #fbbf24; }
+        .info-box {
+            background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px;
+            padding: 20px; margin: 20px 0;
+        }
+        .info-box h4 { color: var(--primary); margin-bottom: 8px; }
+        .warn-box {
+            background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px;
+            padding: 20px; margin: 20px 0;
+        }
+        .warn-box h4 { color: #d97706; margin-bottom: 8px; }
+        .diagram {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px;
+            padding: 32px; margin: 24px 0; text-align: center;
+        }
+        .diagram pre {
+            text-align: left; display: inline-block; font-family: 'Cascadia Code', monospace;
+            font-size: 0.85rem; line-height: 1.5;
+        }
+        .layer {
+            border: 2px solid var(--primary); border-radius: 12px; padding: 16px; margin: 12px 0;
+            background: rgba(37, 99, 235, 0.03);
+        }
+        .layer-title { font-weight: 700; color: var(--primary); font-size: 1.05rem; margin-bottom: 8px; }
+        .module-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 8px; margin-top: 12px;
+        }
+        .module-item {
+            background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;
+            padding: 8px 12px; font-size: 0.88rem; text-align: center;
+        }
+        table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+        th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+        th { background: #f1f5f9; font-weight: 600; }
+        code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+        footer { text-align: center; padding: 30px; color: var(--text-muted); border-top: 1px solid var(--border); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏗️ Kiến Trúc Tổng Thể</h1>
+        <p>Cấu trúc thư mục, phân lớp và data flow của QGroundControl</p>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="index.html">🏠 Tổng quan</a></li>
+            <li><a href="architecture.html">🏗️ Kiến trúc</a></li>
+            <li><a href="design-patterns.html">🧩 Design Patterns</a></li>
+            <li><a href="core-modules.html">⚙️ Core Modules</a></li>
+            <li><a href="communication.html">📡 Communication</a></li>
+            <li><a href="build-system.html">🔨 Build System</a></li>
+            <li><a href="qml-ui.html">🎨 QML & UI</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+
+        <h2>1. Cấu Trúc Thư Mục Dự Án</h2>
+        <div class="code-block">
+<span class="folder">qgroundcontrol/</span>
+├── <span class="folder">src/</span>                    <span class="comment"># Source code chính (C++ & QML)</span>
+│   ├── main.cc              <span class="comment"># Entry point</span>
+│   ├── QGCApplication.cc/h  <span class="comment"># Application class chính</span>
+│   ├── pch.h                <span class="comment"># Precompiled header</span>
+│   ├── <span class="folder">Vehicle/</span>            <span class="comment"># Vehicle state & communications</span>
+│   ├── <span class="folder">FactSystem/</span>         <span class="comment"># Parameter management (CORE)</span>
+│   ├── <span class="folder">FirmwarePlugin/</span>     <span class="comment"># PX4/ArduPilot abstraction</span>
+│   ├── <span class="folder">AutoPilotPlugins/</span>   <span class="comment"># Vehicle setup UI per firmware</span>
+│   ├── <span class="folder">MissionManager/</span>     <span class="comment"># Mission planning & execution</span>
+│   ├── <span class="folder">MAVLink/</span>            <span class="comment"># Protocol handling</span>
+│   ├── <span class="folder">Comms/</span>              <span class="comment"># Communication links</span>
+│   ├── <span class="folder">Settings/</span>           <span class="comment"># Persistent settings (25+ groups)</span>
+│   ├── <span class="folder">QmlControls/</span>        <span class="comment"># 100+ reusable QML components</span>
+│   ├── <span class="folder">FlightMap/</span>          <span class="comment"># Map rendering</span>
+│   ├── <span class="folder">FlyView/</span>            <span class="comment"># Flight view UI</span>
+│   ├── <span class="folder">PlanView/</span>           <span class="comment"># Mission plan view UI</span>
+│   ├── <span class="folder">Camera/</span>             <span class="comment"># Camera control</span>
+│   ├── <span class="folder">Gimbal/</span>             <span class="comment"># Gimbal control</span>
+│   ├── <span class="folder">Joystick/</span>           <span class="comment"># Joystick input</span>
+│   ├── <span class="folder">GPS/</span>                <span class="comment"># GPS/RTK</span>
+│   ├── <span class="folder">VideoManager/</span>       <span class="comment"># Video streaming</span>
+│   ├── <span class="folder">Terrain/</span>            <span class="comment"># Terrain data</span>
+│   ├── <span class="folder">Viewer3D/</span>           <span class="comment"># 3D visualization</span>
+│   ├── <span class="folder">ADSB/</span>               <span class="comment"># Aircraft tracking</span>
+│   ├── <span class="folder">AnalyzeView/</span>        <span class="comment"># Log analysis</span>
+│   ├── <span class="folder">API/</span>                <span class="comment"># Core plugin & customization</span>
+│   ├── <span class="folder">UI/</span>                 <span class="comment"># Main UI layout</span>
+│   └── <span class="folder">Utilities/</span>          <span class="comment"># Helper classes</span>
+├── <span class="folder">test/</span>                   <span class="comment"># Unit tests (mirrors src/ structure)</span>
+├── <span class="folder">cmake/</span>                  <span class="comment"># CMake modules & configs</span>
+├── <span class="folder">tools/</span>                  <span class="comment"># Dev scripts & tools</span>
+├── <span class="folder">resources/</span>              <span class="comment"># Icons, fonts, audio, firmware</span>
+├── <span class="folder">translations/</span>           <span class="comment"># i18n files</span>
+├── <span class="folder">custom-example/</span>         <span class="comment"># Custom build template</span>
+├── <span class="folder">deploy/</span>                 <span class="comment"># Platform deployment configs</span>
+├── <span class="folder">.github/</span>                <span class="comment"># CI/CD workflows</span>
+├── CMakeLists.txt           <span class="comment"># Root build config</span>
+├── Makefile                 <span class="comment"># Make convenience wrapper</span>
+└── justfile                 <span class="comment"># Just convenience wrapper</span>
+        </div>
+
+        <h2>2. Kiến Trúc Phân Lớp (Layered Architecture)</h2>
+        <p>QGC sử dụng kiến trúc phân lớp rõ ràng, mỗi lớp chịu trách nhiệm cho một khía cạnh riêng biệt:</p>
+
+        <div class="layer">
+            <div class="layer-title">📱 Lớp 1: Presentation Layer (QML/UI)</div>
+            <p>Giao diện người dùng hoàn toàn bằng QML. Không chứa logic nghiệp vụ.</p>
+            <div class="module-grid">
+                <div class="module-item">FlyView/</div>
+                <div class="module-item">PlanView/</div>
+                <div class="module-item">FlightMap/</div>
+                <div class="module-item">QmlControls/</div>
+                <div class="module-item">UI/</div>
+                <div class="module-item">AnalyzeView/</div>
+                <div class="module-item">Viewer3D/</div>
+            </div>
+        </div>
+
+        <div class="layer">
+            <div class="layer-title">⚙️ Lớp 2: Business Logic Layer (C++)</div>
+            <p>Core logic: quản lý vehicle, mission, parameters, firmware abstraction.</p>
+            <div class="module-grid">
+                <div class="module-item">Vehicle/</div>
+                <div class="module-item">MissionManager/</div>
+                <div class="module-item">FactSystem/</div>
+                <div class="module-item">FirmwarePlugin/</div>
+                <div class="module-item">AutoPilotPlugins/</div>
+                <div class="module-item">Settings/</div>
+                <div class="module-item">Camera/</div>
+                <div class="module-item">Gimbal/</div>
+                <div class="module-item">GPS/</div>
+                <div class="module-item">Joystick/</div>
+                <div class="module-item">FollowMe/</div>
+            </div>
+        </div>
+
+        <div class="layer">
+            <div class="layer-title">📡 Lớp 3: Communication Layer</div>
+            <p>Xử lý giao tiếp MAVLink qua các kênh truyền thông khác nhau.</p>
+            <div class="module-grid">
+                <div class="module-item">MAVLink/</div>
+                <div class="module-item">Comms/</div>
+                <div class="module-item">ADSB/</div>
+                <div class="module-item">PositionManager/</div>
+                <div class="module-item">VideoManager/</div>
+                <div class="module-item">Terrain/</div>
+            </div>
+        </div>
+
+        <div class="layer">
+            <div class="layer-title">🔌 Lớp 4: Platform Abstraction Layer</div>
+            <p>Abstract các chi tiết platform-specific.</p>
+            <div class="module-grid">
+                <div class="module-item">Android/</div>
+                <div class="module-item">QtLocationPlugin/</div>
+                <div class="module-item">Utilities/</div>
+                <div class="module-item">API/</div>
+            </div>
+        </div>
+
+        <h2>3. Application Lifecycle</h2>
+        <p>Flow khởi động ứng dụng:</p>
+
+        <div class="diagram">
+<pre>
+main.cc
+  │
+  ▼
+QGCApplication (kế thừa QApplication)
+  │
+  ├── init()
+  │    ├── Settings version check
+  │    ├── SettingsManager khởi tạo
+  │    ├── LinkManager khởi tạo
+  │    └── MultiVehicleManager khởi tạo
+  │
+  ├── _initForNormalAppBoot()
+  │    ├── QQmlApplicationEngine tạo
+  │    ├── QML context properties đăng ký
+  │    ├── Singleton managers expose to QML
+  │    ├── Video/GStreamer init
+  │    └── Root QML window load
+  │
+  └── exec() → Qt Event Loop
+       ├── MAVLink message processing
+       ├── Vehicle heartbeat monitoring
+       ├── Link connection management
+       └── QML UI rendering
+</pre>
+        </div>
+
+        <h2>4. Data Flow Chính</h2>
+
+        <h3>4.1 MAVLink Message Flow (Nhận dữ liệu từ drone)</h3>
+        <div class="diagram">
+<pre>
+Drone/Vehicle (Hardware)
+      │
+      │ MAVLink bytes (Serial/UDP/TCP)
+      ▼
+┌──────────────┐
+│ LinkInterface │ ← SerialLink / UDPLink / TCPLink
+│ (bytesReceived│
+│    signal)    │
+└──────┬───────┘
+       ▼
+┌──────────────────┐
+│ MAVLinkProtocol   │ ← Singleton: parse, validate, track sequence
+│ (messageReceived  │
+│    signal)        │
+└──────┬───────────┘
+       ▼
+┌──────────────────┐
+│ Vehicle           │ ← Route message to right vehicle by sysid
+│ _mavlinkMessage   │
+│ Handler()         │
+└──────┬───────────┘
+       │
+       ├──► ParameterManager  → Fact.rawValueChanged()
+       ├──► MissionManager    → Mission progress update
+       ├──► FactGroups        → Telemetry (GPS, battery, ...)
+       ├──► VehicleLinkManager→ Heartbeat tracking
+       └──► StatusTextHandler → Status messages
+              │
+              ▼
+         QML UI Update (via Q_PROPERTY NOTIFY signals)
+</pre>
+        </div>
+
+        <h3>4.2 Command Flow (Gửi lệnh đến drone)</h3>
+        <div class="diagram">
+<pre>
+QML UI (Button click / Slider change)
+      │
+      │ Q_INVOKABLE / Signal
+      ▼
+┌──────────────────┐
+│ Vehicle           │ ← guidedModeTakeoff(), setFlightMode(), etc.
+│                   │
+└──────┬───────────┘
+       │
+       ▼
+┌──────────────────┐
+│ FirmwarePlugin    │ ← Encode to correct MAVLink format per firmware
+│                   │
+└──────┬───────────┘
+       │
+       ▼
+┌──────────────────┐
+│ LinkInterface     │ ← _writeBytes() → Serial/UDP/TCP
+│                   │
+└──────────────────┘
+       │
+       ▼
+  Drone/Vehicle
+</pre>
+        </div>
+
+        <h2>5. Module Dependencies</h2>
+
+        <table>
+            <tr>
+                <th>Module</th>
+                <th>Phụ thuộc vào</th>
+                <th>Được sử dụng bởi</th>
+            </tr>
+            <tr>
+                <td><code>FactSystem</code></td>
+                <td>Qt Core</td>
+                <td>Vehicle, Settings, AutoPilotPlugins, QML UI</td>
+            </tr>
+            <tr>
+                <td><code>Vehicle</code></td>
+                <td>FactSystem, MAVLink, Comms, FirmwarePlugin</td>
+                <td>QML views, MissionManager, FlyView</td>
+            </tr>
+            <tr>
+                <td><code>Comms</code></td>
+                <td>MAVLink, Qt Network/SerialPort</td>
+                <td>Vehicle, LinkManager</td>
+            </tr>
+            <tr>
+                <td><code>MAVLink</code></td>
+                <td>Qt Core, MAVLink C library</td>
+                <td>Comms, Vehicle, MissionManager</td>
+            </tr>
+            <tr>
+                <td><code>FirmwarePlugin</code></td>
+                <td>FactSystem, MAVLink</td>
+                <td>Vehicle, AutoPilotPlugins</td>
+            </tr>
+            <tr>
+                <td><code>MissionManager</code></td>
+                <td>Vehicle, FactSystem, MAVLink</td>
+                <td>PlanView, FlyView</td>
+            </tr>
+            <tr>
+                <td><code>Settings</code></td>
+                <td>FactSystem, Qt Settings</td>
+                <td>Toàn bộ ứng dụng</td>
+            </tr>
+            <tr>
+                <td><code>QmlControls</code></td>
+                <td>Qt Quick, FactSystem</td>
+                <td>Tất cả QML views</td>
+            </tr>
+        </table>
+
+        <h2>6. Multi-Vehicle Architecture</h2>
+
+        <div class="info-box">
+            <h4>💡 Nguyên tắc quan trọng nhất</h4>
+            <p>QGC hỗ trợ kết nối <strong>nhiều vehicle cùng lúc</strong>. Mọi code đều phải null-check <code>activeVehicle()</code> và không được giả định chỉ có 1 vehicle.</p>
+        </div>
+
+        <div class="diagram">
+<pre>
+┌─────────────────────────────┐
+│    MultiVehicleManager       │ ← Singleton, quản lý tất cả vehicles
+│    (activeVehicle property)  │
+├─────────────────────────────┤
+│                              │
+│  vehicles: QmlObjectListModel│
+│  ┌──────────┐ ┌──────────┐  │
+│  │ Vehicle 1 │ │ Vehicle 2 │  │
+│  │ (MAV ID 1)│ │ (MAV ID 2)│  │
+│  └───┬──────┘ └───┬──────┘  │
+│      │             │          │
+│  ┌───┴──────┐ ┌───┴──────┐  │
+│  │Link A     │ │Link B     │  │
+│  │(Serial)   │ │(UDP)      │  │
+│  └──────────┘ └──────────┘  │
+│                              │
+│  offlineEditingVehicle       │ ← For mission planning without connection
+│  selectedVehicles[]          │ ← Multi-select support
+└─────────────────────────────┘
+</pre>
+        </div>
+
+        <h2>7. Offline vs Connected Mode</h2>
+        <p>Vehicle class có <strong>2 constructors</strong> hoàn toàn khác nhau:</p>
+        <table>
+            <tr>
+                <th>Aspect</th>
+                <th>Connected Vehicle</th>
+                <th>Offline Vehicle</th>
+            </tr>
+            <tr>
+                <td>Constructor</td>
+                <td><code>Vehicle(LinkInterface*, vehicleId, autopilot, type)</code></td>
+                <td><code>Vehicle(autopilot, type)</code></td>
+            </tr>
+            <tr>
+                <td>Mục đích</td>
+                <td>Điều khiển drone thật</td>
+                <td>Lập kế hoạch mission offline</td>
+            </tr>
+            <tr>
+                <td>Parameters</td>
+                <td>Download từ vehicle</td>
+                <td>Default values từ metadata</td>
+            </tr>
+            <tr>
+                <td>Link</td>
+                <td>Serial/UDP/TCP</td>
+                <td>Không có</td>
+            </tr>
+            <tr>
+                <td>Telemetry</td>
+                <td>Real-time updates</td>
+                <td>Không có</td>
+            </tr>
+        </table>
+
+        <div class="warn-box">
+            <h4>⚠️ Lưu ý quan trọng</h4>
+            <p>Mọi code truy cập vehicle đều phải kiểm tra null trước khi sử dụng:</p>
+            <div class="code-block">
+Vehicle* vehicle = MultiVehicleManager::instance()-&gt;activeVehicle();
+<span class="keyword">if</span> (!vehicle) <span class="keyword">return</span>;
+<span class="comment">// Safe to use vehicle here</span>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>QGroundControl Architecture Documentation</p>
+    </footer>
+</body>
+</html>

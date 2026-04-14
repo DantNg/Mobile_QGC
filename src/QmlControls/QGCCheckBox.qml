@@ -32,8 +32,6 @@ CheckBox {
     }
 
     contentItem: Text {
-        //implicitWidth:  _noText ? 0 : text.implicitWidth + ScreenTools.defaultFontPixelWidth * 0.25
-        //implicitHeight: _noText ? 0 : Math.max(text.implicitHeight, ScreenTools.checkBoxIndicatorSize)
         leftPadding:        control.indicator.width + control.spacing
         verticalAlignment:  Text.AlignVCenter
         text:               control.text
@@ -43,34 +41,52 @@ CheckBox {
         color:              control.textColor
     }
 
-    indicator:  Rectangle {
+    indicator: Rectangle {
         implicitWidth:  ScreenTools.implicitCheckBoxHeight
         implicitHeight: implicitWidth
         x:              control.leftPadding
         y:              parent.height / 2 - height / 2
-        color:          control.enabled ? "white" : "transparent"
-        border.color:   qgcPal.buttonBorder
+        color:          control.checked ? DJIStyle.accentColor : (control.enabled ? DJIStyle.inputBackground : "transparent")
+        border.color:   control.checked ? DJIStyle.accentColor : qgcPal.buttonBorder
         border.width:   1
-        radius:         ScreenTools.defaultBorderRadius
-        opacity:        control.checkedState === Qt.PartiallyChecked ? 0.5 : 1
+        radius:         DJIStyle.radiusSM
 
+        // Hover effect
         Rectangle {
             anchors.fill:   parent
-            color:          qgcPal.buttonHighlight
-            opacity:        control.hovered ? .2 : 0
+            color:          DJIStyle.accentColor
+            opacity:        control.hovered && !control.checked ? 0.1 : 0
             radius:         parent.radius
+
+            Behavior on opacity {
+                NumberAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
+            }
         }
 
         QGCColoredImage {
             source:             "/qmlimages/checkbox-check.svg"
-            color:              qgcPal.buttonHighlight
+            color:              DJIStyle.textOnAccent
             mipmap:             true
             fillMode:           Image.PreserveAspectFit
-            width:              parent.implicitWidth * 0.75
+            width:              parent.implicitWidth * 0.7
             height:             width
             sourceSize.height:  height
             visible:            control.checked
             anchors.centerIn:   parent
+
+            // Fade-in animation for check mark
+            opacity:            control.checked ? 1.0 : 0.0
+            Behavior on opacity {
+                NumberAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
+            }
+        }
+
+        Behavior on color {
+            ColorAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
+        }
+
+        Behavior on border.color {
+            ColorAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
         }
     }
 }

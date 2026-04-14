@@ -30,9 +30,15 @@ Slider {
         width: control.horizontal ? control.availableWidth : implicitWidth
         height: control.horizontal ? implicitHeight : control.availableHeight
         radius: control._barHeight / 2
-        color: qgcPal.button
-        border.width: 1
-        border.color: qgcPal.buttonText
+        color: DJIStyle.borderColor
+
+        // Filled portion of slider track
+        Rectangle {
+            width: control.horizontal ? control.visualPosition * parent.width : parent.width
+            height: control.horizontal ? parent.height : control.visualPosition * parent.height
+            color: DJIStyle.accentColor
+            radius: parent.radius
+        }
     }
 
     handle: Rectangle {
@@ -44,12 +50,31 @@ Slider {
                control.topPadding + control.visualPosition * (control.availableHeight - height)
         implicitWidth: _radius * 2
         implicitHeight: _radius * 2
-        color: qgcPal.button
-        border.color: qgcPal.buttonText
-        border.width: 1
+        color: control.pressed ? DJIStyle.accentColorPressed : DJIStyle.accentColor
+        border.color: "transparent"
+        border.width: 0
         radius: _radius
 
-        property real _radius: ScreenTools.defaultFontPixelHeight / 2
+        property real _radius: ScreenTools.defaultFontPixelHeight * 0.55
+
+        // Outer glow ring on hover/press
+        Rectangle {
+            anchors.centerIn: parent
+            width: parent.width * 1.5
+            height: width
+            radius: width / 2
+            color: DJIStyle.accentColor
+            opacity: control.pressed ? 0.2 : (control.hovered ? 0.1 : 0)
+            visible: opacity > 0
+
+            Behavior on opacity {
+                NumberAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
+            }
+        }
+
+        Behavior on color {
+            ColorAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
+        }
 
         Label {
             text: control.value.toFixed(control.to <= 1 ? 1 : 0)
@@ -57,7 +82,7 @@ Slider {
             anchors.centerIn: parent
             font.family: ScreenTools.normalFontFamily
             font.pointSize: ScreenTools.smallFontPointSize
-            color: qgcPal.buttonText
+            color: DJIStyle.textOnAccent
         }
     }
 

@@ -22,9 +22,14 @@ Button {
 
     background: Rectangle {
         anchors.fill:   parent
-        color:          button.checked ? qgcPal.buttonHighlight : Qt.rgba(0,0,0,0)
+        color:          button.checked ? DJIStyle.accentColor : (button.hovered ? DJIStyle.buttonHover : "transparent")
         border.color:   "red"
         border.width:   QGroundControl.corePlugin.showTouchAreas ? 3 : 0
+        radius:         DJIStyle.radiusSM
+
+        Behavior on color {
+            ColorAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
+        }
     }
 
     contentItem: Row {

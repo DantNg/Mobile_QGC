@@ -13,7 +13,10 @@ GroupBox {
         y:      control.topPadding - control.padding
         width:  parent.width
         height: parent.height - control.topPadding + control.padding
-        color:  qgcPal.windowShade
+        color:  DJIStyle.surfaceColor
+        radius: DJIStyle.cardRadius
+        border.width: 1
+        border.color: DJIStyle.borderColor
     }
 
     label: QGCLabel {

@@ -39,9 +39,13 @@ Item {
     Rectangle {
         anchors.fill:   parent
         radius:         width / 2
-        border.width:   ScreenTools.defaultFontPixelHeight * 0.0625
-        border.color:   lightBorders ? qgcPal.mapWidgetBorderLight : qgcPal.mapWidgetBorderDark
-        color:          checked ? qgcPal.buttonHighlight : qgcPal.button
+        border.width:   DJIStyle.hudBorderWidth
+        border.color:   lightBorders ? DJIStyle.hudBorder : qgcPal.mapWidgetBorderDark
+        color:          checked ? DJIStyle.accentColor : DJIStyle.overlayBackground
+
+        Behavior on color {
+            ColorAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
+        }
 
         QGCColoredImage {
             id:                 button

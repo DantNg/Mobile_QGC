@@ -5,16 +5,17 @@ import QtQuick.Layouts
 import QGroundControl
 import QGroundControl.Controls
 
-/// Standard push button control:
+/// Modern flat button with DJI-inspired styling:
+///     Rounded corners, subtle hover/press animations, clean typography.
 ///     If there is both an icon and text the icon will be to the left of the text
 ///     If icon only, icon will be centered
 Button {
     property bool primary: false
-    property bool showBorder: qgcPal.globalTheme === QGCPalette.Light
-    property real backRadius: ScreenTools.defaultBorderRadius
+    property bool showBorder: false
+    property real backRadius: DJIStyle.buttonRadius
     property real heightFactor: 0.5
     property string iconSource: ""
-    property real fontWeight: Font.Normal // default for qml Text
+    property real fontWeight: Font.Normal
     property real pointSize: ScreenTools.defaultFontPointSize
 
     property alias wrapMode: text.wrapMode
@@ -48,11 +49,36 @@ Button {
         border.color: qgcPal.buttonBorder
         color: primary ? qgcPal.primaryButton : qgcPal.button
 
+        // Modern hover/press overlay with animation
         Rectangle {
             anchors.fill: parent
-            color: qgcPal.buttonHighlight
-            opacity: _showHighlight ? 1 : control.enabled && control.hovered ? .2 : 0
+            color: _showHighlight ? qgcPal.buttonHighlight : (control.enabled && control.hovered ? qgcPal.buttonHighlight : "transparent")
+            opacity: _showHighlight ? 1 : control.enabled && control.hovered ? 0.15 : 0
             radius: parent.radius
+
+            Behavior on opacity {
+                NumberAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
+            }
+        }
+
+        // Subtle bottom accent line for primary buttons
+        Rectangle {
+            anchors.bottom: parent.bottom
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width * 0.6
+            height: 2
+            radius: 1
+            color: DJIStyle.accentColor
+            visible: primary && control.enabled
+            opacity: _showHighlight ? 1.0 : 0.0
+
+            Behavior on opacity {
+                NumberAnimation { duration: DJIStyle.animNormal; easing.type: DJIStyle.animEasing }
+            }
+        }
+
+        Behavior on color {
+            ColorAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
         }
     }
 
@@ -80,6 +106,16 @@ Button {
             font.weight: fontWeight
             color: _showHighlight ? qgcPal.buttonHighlightText : (primary ? qgcPal.primaryButtonText : qgcPal.buttonText)
             visible: control.text !== ""
+
+            Behavior on color {
+                ColorAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
+            }
         }
+    }
+
+    // Subtle scale animation on press
+    scale: _showHighlight ? 0.97 : 1.0
+    Behavior on scale {
+        NumberAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasingBounce }
     }
 }

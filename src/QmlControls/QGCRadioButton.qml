@@ -17,28 +17,40 @@ RadioButton {
     indicator: Rectangle {
         implicitWidth:          ScreenTools.radioButtonIndicatorSize
         implicitHeight:         width
-        color:                  control.enabled ? "white" : "transparent"
-        border.color:           qgcPal.buttonBorder
+        color:                  control.checked ? DJIStyle.accentColor : (control.enabled ? DJIStyle.inputBackground : "transparent")
+        border.color:           control.checked ? DJIStyle.accentColor : qgcPal.buttonBorder
+        border.width:           1
         radius:                 height / 2
         x:                      control.leftPadding
         y:                      parent.height / 2 - height / 2
 
         Rectangle {
             anchors.fill:   parent
-            color:          qgcPal.buttonHighlight
-            opacity:        control.hovered ? .2 : 0
+            color:          DJIStyle.accentColor
+            opacity:        control.hovered && !control.checked ? 0.1 : 0
             radius:         parent.radius
+
+            Behavior on opacity {
+                NumberAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
+            }
         }
 
         Rectangle {
             anchors.centerIn:   parent
-            // Width should be an odd number to be centralized by the parent properly
             width:              2 * Math.floor(parent.width / 4) + 1
             height:             width
             antialiasing:       true
             radius:             height * 0.5
-            color:              qgcPal.buttonHighlight
+            color:              DJIStyle.textOnAccent
             visible:            control.checked
+        }
+
+        Behavior on color {
+            ColorAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
+        }
+
+        Behavior on border.color {
+            ColorAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
         }
     }
 

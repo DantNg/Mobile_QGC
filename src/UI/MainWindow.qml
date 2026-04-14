@@ -346,8 +346,8 @@ ApplicationWindow {
         text:           qsTr("Please correct the invalid value before continuing")
 
         background: Rectangle {
-            color:  qgcPal.alertBackground
-            radius: ScreenTools.defaultFontPixelWidth / 2
+            color:  DJIStyle.statusOrange
+            radius: DJIStyle.tooltipRadius
         }
 
         contentItem: QGCLabel {
@@ -367,7 +367,7 @@ ApplicationWindow {
         id:             toolDrawer
         anchors.fill:   parent
         visible:        false
-        color:          qgcPal.window
+        color:          DJIStyle.backgroundColor
 
         property var backIcon
         property string toolTitle
@@ -391,7 +391,16 @@ ApplicationWindow {
             anchors.right:  parent.right
             anchors.top:    parent.top
             height:         ScreenTools.toolbarHeight
-            color:          qgcPal.toolbarBackground
+            color:          DJIStyle.toolbarBackground
+
+            // Bottom border line
+            Rectangle {
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 1
+                color: DJIStyle.dividerColor
+            }
 
             RowLayout {
                 id:                 toolDrawerToolbarLayout
@@ -462,18 +471,18 @@ ApplicationWindow {
 
         background: Rectangle {
             anchors.fill:   parent
-            color:          qgcPal.alertBackground
-            radius:         ScreenTools.defaultFontPixelHeight * 0.5
-            border.color:   qgcPal.alertBorder
-            border.width:   2
+            color:          DJIStyle.statusOrange
+            radius:         DJIStyle.cardRadius
+            border.color:   DJIStyle.borderColor
+            border.width:   1
 
             Rectangle {
                 anchors.horizontalCenter:   parent.horizontalCenter
                 anchors.top:                parent.top
                 anchors.topMargin:          -(height / 2)
-                color:                      qgcPal.alertBackground
-                radius:                     ScreenTools.defaultFontPixelHeight * 0.25
-                border.color:               qgcPal.alertBorder
+                color:                      DJIStyle.statusOrange
+                radius:                     DJIStyle.tooltipRadius
+                border.color:               DJIStyle.borderColor
                 border.width:               1
                 width:                      vehicleWarningLabel.contentWidth + _margins
                 height:                     vehicleWarningLabel.contentHeight + _margins
@@ -593,9 +602,11 @@ ApplicationWindow {
             Rectangle {
                 id:             backgroundRect
                 anchors.fill:   parent
-                color:          QGroundControl.globalPalette.window
-                radius:         indicatorDrawer._margins
-                opacity:        0.85
+                color:          DJIStyle.cardBackground
+                radius:         DJIStyle.cardRadius
+                opacity:        DJIStyle.opacityHUD
+                border.width:   1
+                border.color:   DJIStyle.borderColor
             }
 
             Rectangle {
@@ -604,14 +615,13 @@ ApplicationWindow {
                 width:                      ScreenTools.largeFontPixelHeight
                 height:                     width
                 radius:                     width / 2
-                color:                      QGroundControl.globalPalette.button
-                border.color:               QGroundControl.globalPalette.buttonText
+                color:                      DJIStyle.accentColor
                 visible:                    indicatorDrawerLoader.item && indicatorDrawerLoader.item._showExpand && !indicatorDrawer._expanded
 
                 QGCLabel {
                     anchors.centerIn:   parent
                     text:               ">"
-                    color:              QGroundControl.globalPalette.buttonText
+                    color:              DJIStyle.textOnAccent
                 }
 
                 QGCMouseArea {

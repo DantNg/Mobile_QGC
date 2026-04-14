@@ -38,14 +38,20 @@ Button {
 
     background: Rectangle {
         id:     innerRect
-        color:  qgcPal.windowShade
+        color:  DJIStyle.surfaceColor
+        radius: DJIStyle.radiusMD
 
         implicitWidth: titleBar.x + titleBar.contentWidth + ScreenTools.defaultFontPixelWidth
 
         Rectangle {
             anchors.fill:   parent
-            color:          qgcPal.buttonHighlight
-            opacity:        showHighlight ? 1 : control.enabled && control.hovered ? .2 : 0
+            radius:         parent.radius
+            color:          showHighlight ? DJIStyle.accentColor : (control.enabled && control.hovered ? DJIStyle.buttonHover : "transparent")
+            opacity:        showHighlight ? 1 : (control.enabled && control.hovered ? 0.5 : 0)
+
+            Behavior on opacity {
+                NumberAnimation { duration: DJIStyle.animFast; easing.type: DJIStyle.animEasing }
+            }
         }
 
         QGCColoredImage {

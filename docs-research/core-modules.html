@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core Modules - QGroundControl</title>
+    <style>
+        :root { --primary: #059669; --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+        .header { background: linear-gradient(135deg, #064e3b 0%, #059669 100%); color: white; padding: 40px; text-align: center; }
+        .header h1 { font-size: 2.2rem; font-weight: 800; }
+        .header p { opacity: 0.9; margin-top: 8px; }
+        nav { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 40px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        nav ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        nav a { color: var(--primary); text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 500; font-size: 0.95rem; }
+        nav a:hover { background: #ecfdf5; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+        h2 { font-size: 1.6rem; font-weight: 700; margin: 40px 0 16px; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+        h3 { font-size: 1.15rem; margin: 20px 0 10px; }
+        h4 { margin: 14px 0 6px; }
+        p { margin-bottom: 10px; }
+        ul, ol { margin-left: 24px; margin-bottom: 14px; }
+        li { margin-bottom: 4px; }
+        .code-block {
+            background: #1e293b; color: #e2e8f0; border-radius: 12px; padding: 20px 24px;
+            font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.88rem;
+            overflow-x: auto; margin: 14px 0; line-height: 1.6; white-space: pre;
+        }
+        .comment { color: #64748b; }
+        .keyword { color: #6ee7b7; }
+        .type { color: #7dd3fc; }
+        .string { color: #fbbf24; }
+        .module-section {
+            background: var(--card-bg); border: 2px solid var(--border); border-radius: 16px;
+            padding: 28px; margin: 24px 0;
+        }
+        .module-section:hover { border-color: var(--primary); }
+        .module-section h3 { margin-top: 0; color: var(--primary); font-size: 1.3rem; }
+        .module-badge {
+            display: inline-block; padding: 3px 10px; border-radius: 6px;
+            font-size: 0.8rem; font-weight: 600; margin-bottom: 8px;
+        }
+        .badge-core { background: #d1fae5; color: #065f46; }
+        .badge-comms { background: #dbeafe; color: #1e40af; }
+        .badge-mission { background: #fef3c7; color: #92400e; }
+        .badge-settings { background: #ede9fe; color: #5b21b6; }
+        table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+        th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; font-size: 0.93rem; }
+        th { background: #ecfdf5; font-weight: 600; }
+        code { background: #f0fdf4; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+        .info-box { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 18px; margin: 14px 0; }
+        .info-box h4 { color: var(--primary); margin-bottom: 6px; }
+        .warn-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 18px; margin: 14px 0; }
+        .warn-box h4 { color: #d97706; margin-bottom: 6px; }
+        footer { text-align: center; padding: 30px; color: var(--text-muted); border-top: 1px solid var(--border); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚙️ Core Modules</h1>
+        <p>Phân tích chi tiết các module cốt lõi của QGroundControl</p>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="index.html">🏠 Tổng quan</a></li>
+            <li><a href="architecture.html">🏗️ Kiến trúc</a></li>
+            <li><a href="design-patterns.html">🧩 Design Patterns</a></li>
+            <li><a href="core-modules.html">⚙️ Core Modules</a></li>
+            <li><a href="communication.html">📡 Communication</a></li>
+            <li><a href="build-system.html">🔨 Build System</a></li>
+            <li><a href="qml-ui.html">🎨 QML & UI</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+
+        <!-- VEHICLE -->
+        <div class="module-section">
+            <span class="module-badge badge-core">CORE</span>
+            <h3>1. Vehicle Module</h3>
+            <p>Class <code>Vehicle</code> là trung tâm của QGC - đại diện cho một drone/vehicle đã kết nối hoặc offline.</p>
+
+            <h4>Thành phần chính của Vehicle:</h4>
+            <table>
+                <tr><th>Component</th><th>Type</th><th>Mô tả</th></tr>
+                <tr><td><code>_parameterManager</code></td><td>ParameterManager*</td><td>Download/upload parameters từ vehicle</td></tr>
+                <tr><td><code>_vehicleLinkManager</code></td><td>VehicleLinkManager*</td><td>Quản lý communication links</td></tr>
+                <tr><td><code>_firmwarePlugin</code></td><td>FirmwarePlugin*</td><td>Firmware-specific behavior</td></tr>
+                <tr><td><code>_autopilotPlugin</code></td><td>AutoPilotPlugin*</td><td>Vehicle setup UI</td></tr>
+                <tr><td><code>_missionManager</code></td><td>MissionManager*</td><td>Mission upload/download</td></tr>
+                <tr><td><code>_geoFenceManager</code></td><td>GeoFenceManager*</td><td>Geofence management</td></tr>
+                <tr><td><code>_rallyPointManager</code></td><td>RallyPointManager*</td><td>Rally/safe points</td></tr>
+            </table>
+
+            <h4>FactGroups (Telemetry Data):</h4>
+            <div class="code-block"><span class="comment">// Vehicle kế thừa từ FactGroup và chứa nhiều sub-groups</span>
+<span class="type">Vehicle</span> : <span class="keyword">public</span> <span class="type">FactGroup</span>
+  ├── gps          <span class="comment">// GPS data (lat, lon, alt, hdop, vdop, ...)</span>
+  ├── gps2         <span class="comment">// Secondary GPS</span>
+  ├── gpsAggregate <span class="comment">// Combined GPS quality</span>
+  ├── wind         <span class="comment">// Wind speed/direction</span>
+  ├── vibration    <span class="comment">// Vibration levels (x, y, z)</span>
+  ├── temperature  <span class="comment">// Board/ambient temperature</span>
+  ├── clock        <span class="comment">// Vehicle clock</span>
+  ├── setpoint     <span class="comment">// Attitude setpoints</span>
+  ├── estimatorStatus <span class="comment">// EKF status</span>
+  ├── terrain      <span class="comment">// Terrain height data</span>
+  ├── distanceSensors <span class="comment">// Rangefinder data</span>
+  ├── localPosition <span class="comment">// Local NED position</span>
+  ├── hygrometer   <span class="comment">// Humidity sensor</span>
+  ├── generator    <span class="comment">// Generator status</span>
+  ├── efi          <span class="comment">// Electronic Fuel Injection</span>
+  ├── batteries[]  <span class="comment">// Battery FactGroupListModel (dynamic)</span>
+  └── escs[]       <span class="comment">// ESC FactGroupListModel (dynamic)</span></div>
+
+            <h4>Guided Mode Commands:</h4>
+            <div class="code-block"><span class="comment">// Vehicle cung cấp high-level commands cho guided flight</span>
+vehicle-&gt;guidedModeRTL();               <span class="comment">// Return to Launch</span>
+vehicle-&gt;guidedModeLand();              <span class="comment">// Land at current position</span>
+vehicle-&gt;guidedModeTakeoff(altitude);   <span class="comment">// Auto takeoff</span>
+vehicle-&gt;guidedModeGotoLocation(coord); <span class="comment">// Fly to GPS coordinate</span>
+vehicle-&gt;guidedModeChangeAltitude(alt); <span class="comment">// Change altitude</span>
+vehicle-&gt;pauseVehicle();                <span class="comment">// Pause/hold position</span>
+vehicle-&gt;emergencyStop();               <span class="comment">// Kill motors immediately</span>
+vehicle-&gt;motorTest(motor, percent, secs); <span class="comment">// Test individual motor</span></div>
+        </div>
+
+        <!-- MULTI VEHICLE MANAGER -->
+        <div class="module-section">
+            <span class="module-badge badge-core">CORE</span>
+            <h3>2. MultiVehicleManager</h3>
+            <p>Singleton quản lý tất cả vehicles và xử lý vehicle selection.</p>
+
+            <div class="code-block"><span class="type">MultiVehicleManager</span>::instance()
+  │
+  ├── activeVehicle          <span class="comment">// Vehicle đang được chọn (có thể null!)</span>
+  ├── vehicles               <span class="comment">// QmlObjectListModel chứa tất cả vehicles</span>
+  ├── offlineEditingVehicle  <span class="comment">// Vehicle ảo cho mission planning offline</span>
+  ├── selectedVehicles[]     <span class="comment">// Multi-select cho batch operations</span>
+  │
+  ├── parameterReadyVehicleAvailable  <span class="comment">// true khi có vehicle với params loaded</span>
+  │
+  ├── getVehicleById(id)     <span class="comment">// Lookup vehicle bằng MAVLink system ID</span>
+  ├── selectVehicle(v)       <span class="comment">// Add to selection</span>
+  ├── deselectVehicle(v)     <span class="comment">// Remove from selection</span>
+  └── setActiveVehicle(v)    <span class="comment">// Two-phase activation process</span></div>
+
+            <div class="warn-box">
+                <h4>⚠️ Two-Phase Vehicle Activation</h4>
+                <p>Khi <code>setActiveVehicle()</code> được gọi, QGC thực hiện 2 giai đoạn:</p>
+                <ol>
+                    <li><strong>Deactivate old vehicle</strong>: Lưu state, disconnect signals, clear UI</li>
+                    <li><strong>Activate new vehicle</strong>: Load parameters, connect signals, update UI</li>
+                </ol>
+                <p>Pattern này đảm bảo không bao giờ có 2 vehicles active cùng lúc.</p>
+            </div>
+        </div>
+
+        <!-- FACT SYSTEM -->
+        <div class="module-section">
+            <span class="module-badge badge-core">CORE</span>
+            <h3>3. FactSystem Module</h3>
+            <p>Hệ thống quản lý toàn bộ parameters và settings. Bao gồm 4 class chính:</p>
+
+            <h4>3.1 FactMetaData</h4>
+            <div class="code-block"><span class="comment">// Metadata cho 1 parameter/setting - load từ JSON</span>
+<span class="type">FactMetaData</span>
+  ├── type           <span class="comment">// valueTypeUint8, Float, Int32, String, Bool, ...</span>
+  ├── name           <span class="comment">// Tên parameter (e.g., "PARAM_NAME")</span>
+  ├── shortDescription <span class="comment">// Mô tả ngắn</span>
+  ├── longDescription  <span class="comment">// Mô tả chi tiết</span>
+  ├── units          <span class="comment">// Đơn vị (m, m/s, deg, ...)</span>
+  ├── min / max      <span class="comment">// Giới hạn giá trị</span>
+  ├── defaultValue   <span class="comment">// Giá trị mặc định</span>
+  ├── decimalPlaces  <span class="comment">// Số chữ số thập phân</span>
+  ├── enumStrings[]  <span class="comment">// Label cho dropdown</span>
+  ├── enumValues[]   <span class="comment">// Value cho dropdown</span>
+  ├── bitmaskStrings[] <span class="comment">// Label cho bitmask checkboxes</span>
+  ├── bitmaskValues[]  <span class="comment">// Value cho bitmask</span>
+  ├── rawTranslator  <span class="comment">// Function: raw → cooked</span>
+  ├── cookedTranslator <span class="comment">// Function: cooked → raw</span>
+  ├── vehicleRebootRequired <span class="comment">// Cần reboot vehicle sau khi thay đổi</span>
+  └── qgcRebootRequired     <span class="comment">// Cần restart QGC sau khi thay đổi</span></div>
+
+            <h4>3.2 Fact</h4>
+            <div class="code-block"><span class="type">Fact</span>
+  ├── rawValue()            <span class="comment">// Giá trị gốc (int/float/string)</span>
+  ├── cookedValue()         <span class="comment">// Giá trị đã convert (với đơn vị display)</span>
+  ├── setRawValue(v)        <span class="comment">// Set giá trị → emit valueChanged</span>
+  ├── setCookedValue(v)     <span class="comment">// Set qua converter → emit valueChanged</span>
+  ├── enumOrValueString()   <span class="comment">// Trả về enum label hoặc value string</span>
+  ├── validate(value, coerce) <span class="comment">// Validate giá trị</span>
+  ├── metaData()            <span class="comment">// Truy cập FactMetaData</span>
+  │
+  <span class="comment">// Signals:</span>
+  ├── valueChanged(rawValue)        <span class="comment">// Khi value thay đổi</span>
+  ├── containerRawValueChanged(raw) <span class="comment">// Cần gửi lên vehicle</span>
+  └── vehicleUpdated(rawValue)      <span class="comment">// ACK từ vehicle</span></div>
+
+            <h4>3.3 ParameterManager</h4>
+            <div class="code-block"><span class="type">ParameterManager</span>
+  ├── parametersReady       <span class="comment">// true khi tất cả params đã download</span>
+  ├── missingParameters     <span class="comment">// true nếu có params không nhận được</span>
+  ├── loadProgress          <span class="comment">// 0.0 - 1.0 download progress</span>
+  ├── pendingWrites         <span class="comment">// Số params chờ gửi lên vehicle</span>
+  │
+  ├── getParameter(comp, name)        <span class="comment">// Lấy Fact* cho 1 parameter</span>
+  ├── parameterExists(comp, name)     <span class="comment">// Kiểm tra param có tồn tại</span>
+  ├── parameterNames(comp)            <span class="comment">// Danh sách tên params</span>
+  ├── refreshAllParameters()          <span class="comment">// Re-download tất cả</span>
+  ├── refreshParameter(comp, name)    <span class="comment">// Re-download 1 param</span>
+  └── resetAllToVehicleConfiguration() <span class="comment">// Revert changes</span>
+
+<span class="comment">// Parameter caching:</span>
+<span class="comment">// - Params được cache theo vehicleId/componentId</span>
+<span class="comment">// - PX4 dùng hash-check để validate cache nhanh</span>
+<span class="comment">// - Nếu hash match → dùng cache, không cần re-download</span></div>
+
+            <div class="info-box">
+                <h4>💡 Parameter Workflow</h4>
+                <ol>
+                    <li>Vehicle connect → ParameterManager request tất cả params</li>
+                    <li>Vehicle gửi PARAM_VALUE messages → ParameterManager tạo Fact cho mỗi param</li>
+                    <li>Khi tất cả params nhận đủ → <code>parametersReady = true</code></li>
+                    <li>User thay đổi param trong UI → Fact.containerRawValueChanged signal</li>
+                    <li>ParameterManager gửi PARAM_SET message lên vehicle</li>
+                    <li>Vehicle ACK → Fact.vehicleUpdated signal</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- FIRMWARE PLUGIN -->
+        <div class="module-section">
+            <span class="module-badge badge-core">CORE</span>
+            <h3>4. FirmwarePlugin Module</h3>
+            <p>Abstract layer cho firmware-specific behaviors. Mỗi firmware type (PX4, ArduPilot, Generic) có implementation riêng.</p>
+
+            <h4>Key Virtual Methods:</h4>
+            <table>
+                <tr><th>Method</th><th>Mô tả</th></tr>
+                <tr><td><code>flightModes()</code></td><td>Danh sách flight modes có sẵn</td></tr>
+                <tr><td><code>flightMode(baseMode, customMode)</code></td><td>Convert MAVLink mode → tên hiển thị</td></tr>
+                <tr><td><code>setFlightMode(modeName)</code></td><td>Convert tên → MAVLink SET_MODE command</td></tr>
+                <tr><td><code>isCapable(capability)</code></td><td>Kiểm tra firmware hỗ trợ feature</td></tr>
+                <tr><td><code>autopilotPlugin(vehicle)</code></td><td>Factory method tạo setup UI plugin</td></tr>
+                <tr><td><code>pauseFlightMode()</code></td><td>Tên flight mode pause (khác nhau giữa PX4/APM)</td></tr>
+                <tr><td><code>missionFlightMode()</code></td><td>Tên flight mode cho mission execution</td></tr>
+                <tr><td><code>rtlFlightMode()</code></td><td>Tên flight mode Return to Launch</td></tr>
+                <tr><td><code>remapParamName()</code></td><td>Remap tên param theo firmware version</td></tr>
+            </table>
+
+            <h4>Implementations:</h4>
+            <div class="code-block"><span class="comment">// PX4FirmwarePlugin</span>
+<span class="comment">// - Flight modes: Manual, Altitude, Position, Mission, Hold, Return, ...</span>
+<span class="comment">// - Supports: guided, takeoff, orbit, ROI, landing patterns</span>
+<span class="comment">// - Parameter caching with hash verification</span>
+
+<span class="comment">// ArduPilotFirmwarePlugin (APM)</span>
+<span class="comment">// - Sub-plugins per vehicle type:</span>
+<span class="comment">//   ArduCopterFirmwarePlugin (Copter modes: Stabilize, AltHold, Loiter, ...)</span>
+<span class="comment">//   ArduPlaneFirmwarePlugin  (Plane modes: Manual, FBWA, Auto, ...)</span>
+<span class="comment">//   ArduRoverFirmwarePlugin  (Rover modes: Manual, Guided, Auto, ...)</span>
+<span class="comment">//   ArduSubFirmwarePlugin    (Sub modes: Manual, Stabilize, ...)</span>
+
+<span class="comment">// GenericFirmwarePlugin</span>
+<span class="comment">// - Minimal capabilities</span>
+<span class="comment">// - Used for unknown MAVLink vehicles</span></div>
+        </div>
+
+        <!-- MISSION MANAGER -->
+        <div class="module-section">
+            <span class="module-badge badge-mission">MISSION</span>
+            <h3>5. MissionManager Module</h3>
+            <p>Quản lý mission planning, upload, download, và execution.</p>
+
+            <h4>Mission Item Hierarchy:</h4>
+            <div class="code-block"><span class="type">VisualMissionItem</span> (abstract base)
+  │
+  ├── <span class="type">SimpleMissionItem</span>
+  │     <span class="comment">// Một MAVLink command: Waypoint, Takeoff, Land, Camera, ...</span>
+  │     <span class="comment">// Chứa MissionItem (MAV_CMD + params)</span>
+  │
+  └── <span class="type">ComplexMissionItem</span> (abstract)
+        │
+        ├── <span class="type">SurveyComplexItem</span>
+        │     <span class="comment">// Grid survey pattern (photogrammetry)</span>
+        │     <span class="comment">// Auto-generate flight path to cover polygon area</span>
+        │
+        ├── <span class="type">StructureScanComplexItem</span>
+        │     <span class="comment">// Orbit scan around structure</span>
+        │     <span class="comment">// Multi-layer altitude for 3D model</span>
+        │
+        ├── <span class="type">CorridorScanComplexItem</span>
+        │     <span class="comment">// Follow corridor (road, pipeline) with overlap</span>
+        │
+        ├── <span class="type">FixedWingLandingComplexItem</span>
+        │     <span class="comment">// Fixed-wing landing pattern with approach</span>
+        │
+        └── <span class="type">VTOLLandingComplexItem</span>
+              <span class="comment">// VTOL transition + landing</span></div>
+
+            <h4>Controllers:</h4>
+            <table>
+                <tr><th>Controller</th><th>Chức năng</th></tr>
+                <tr><td><code>MissionController</code></td><td>Tạo, edit, upload, download mission items</td></tr>
+                <tr><td><code>GeoFenceController</code></td><td>Quản lý geofence boundaries</td></tr>
+                <tr><td><code>RallyPointController</code></td><td>Quản lý rally/safe return points</td></tr>
+                <tr><td><code>PlanMasterController</code></td><td>Coordinator cho 3 controllers trên</td></tr>
+            </table>
+
+            <h4>Resume Mission Feature:</h4>
+            <div class="code-block"><span class="comment">// Khi mission bị interrupt (battery low, comm lost, etc.):</span>
+<span class="comment">// 1. Vehicle lands/RTLs</span>
+<span class="comment">// 2. User reconnects</span>
+<span class="comment">// 3. QGC offers "Resume Mission" option</span>
+<span class="comment">// 4. generateResumeMission() tạo new mission từ waypoint N</span>
+<span class="comment">// 5. Upload new shortened mission</span>
+<span class="comment">// 6. Vehicle continues from where it stopped</span></div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="module-section">
+            <span class="module-badge badge-settings">SETTINGS</span>
+            <h3>6. Settings Module</h3>
+            <p>Quản lý 25+ groups persistent settings, mỗi setting là một Fact object.</p>
+
+            <h4>Settings Architecture:</h4>
+            <div class="code-block"><span class="type">SettingsManager</span> (Singleton)
+  │
+  ├── appSettings               <span class="comment">// General app config</span>
+  ├── autoConnectSettings       <span class="comment">// Auto-connect rules per link type</span>
+  ├── batteryIndicatorSettings  <span class="comment">// Battery warning levels</span>
+  ├── firmwareUpgradeSettings   <span class="comment">// Firmware flash options</span>
+  ├── flightMapSettings         <span class="comment">// Map provider, tile type</span>
+  ├── flightModeSettings        <span class="comment">// Flight mode indicator config</span>
+  ├── flyViewSettings           <span class="comment">// Fly view layout prefs</span>
+  ├── gimbalControllerSettings  <span class="comment">// Gimbal keybindings</span>
+  ├── joystickSettings          <span class="comment">// Joystick deadzone, mapping</span>
+  ├── mapsSettings              <span class="comment">// Map cache, offline maps</span>
+  ├── mavlinkSettings           <span class="comment">// MAVLink version, stream rates</span>
+  ├── ntripSettings             <span class="comment">// NTRIP RTK correction source</span>
+  ├── offlineMapsSettings       <span class="comment">// Offline map download config</span>
+  ├── planViewSettings          <span class="comment">// Plan view preferences</span>
+  ├── remoteIDSettings          <span class="comment">// Remote ID (drone registration)</span>
+  ├── rtkSettings               <span class="comment">// RTK base station config</span>
+  ├── unitsSettings             <span class="comment">// Display units (metric/imperial)</span>
+  └── videoSettings             <span class="comment">// Video streaming config</span></div>
+
+            <h4>Settings Metadata JSON:</h4>
+            <div class="code-block"><span class="comment">// Mỗi settings group có file .SettingsGroup.json</span>
+<span class="comment">// Ví dụ: AppSettings.SettingsGroup.json</span>
+[
+    {
+        <span class="string">"name"</span>:             <span class="string">"offlineEditingFirmwareClass"</span>,
+        <span class="string">"shortDescription"</span>: <span class="string">"Offline editing firmware type"</span>,
+        <span class="string">"type"</span>:             <span class="string">"uint32"</span>,
+        <span class="string">"enumStrings"</span>:      <span class="string">"PX4 Pro,ArduPilot,Generic"</span>,
+        <span class="string">"enumValues"</span>:       <span class="string">"12,3,0"</span>,
+        <span class="string">"defaultValue"</span>:     12
+    }
+]</div>
+        </div>
+
+        <!-- CAMERA -->
+        <div class="module-section">
+            <span class="module-badge badge-comms">PERIPHERAL</span>
+            <h3>7. Camera Module</h3>
+            <p>Điều khiển camera onboard qua MAVLink Camera Protocol v2.</p>
+            <ul>
+                <li><strong>QGCCameraManager</strong>: Quản lý tất cả cameras trên vehicle</li>
+                <li><strong>QGCCameraControl</strong>: Điều khiển 1 camera (photo, video, settings)</li>
+                <li><strong>Camera settings</strong>: Exposure, white balance, resolution - tất cả là Facts</li>
+                <li><strong>MAVLink Camera Protocol</strong>: CAMERA_INFORMATION, CAMERA_SETTINGS, IMAGE commands</li>
+            </ul>
+        </div>
+
+        <!-- GIMBAL -->
+        <div class="module-section">
+            <span class="module-badge badge-comms">PERIPHERAL</span>
+            <h3>8. Gimbal Module</h3>
+            <ul>
+                <li><strong>GimbalController</strong>: Quản lý gimbal orientation</li>
+                <li>Pitch/Yaw control qua MAVLink GIMBAL_MANAGER messages</li>
+                <li>ROI (Region of Interest) tracking</li>
+                <li>Gimbal device protocol support</li>
+            </ul>
+        </div>
+
+        <!-- GPS / RTK -->
+        <div class="module-section">
+            <span class="module-badge badge-comms">PERIPHERAL</span>
+            <h3>9. GPS / RTK Module</h3>
+            <ul>
+                <li><strong>GPSManager</strong>: Quản lý GPS base station cho RTK</li>
+                <li><strong>NTRIP</strong>: NTRIP client cho RTK correction data từ internet</li>
+                <li><strong>RTK</strong>: Real-Time Kinematic positioning với centimeter-level accuracy</li>
+                <li>Support u-blox GPS hardware trực tiếp qua USB</li>
+            </ul>
+        </div>
+
+        <!-- VIDEO -->
+        <div class="module-section">
+            <span class="module-badge badge-comms">PERIPHERAL</span>
+            <h3>10. VideoManager Module</h3>
+            <ul>
+                <li><strong>VideoManager</strong>: Quản lý video streaming từ vehicle</li>
+                <li><strong>GStreamer</strong>: Backend video decoding (RTSP, UDP, TCP)</li>
+                <li><strong>VideoReceiver</strong>: Nhận và decode video stream</li>
+                <li>Support recording video locally</li>
+                <li>Support UVC cameras (USB webcam trực tiếp)</li>
+                <li>Thermal/IR camera overlay support</li>
+            </ul>
+        </div>
+
+        <!-- JOYSTICK -->
+        <div class="module-section">
+            <span class="module-badge badge-comms">INPUT</span>
+            <h3>11. Joystick Module</h3>
+            <ul>
+                <li><strong>JoystickManager</strong>: Detect và quản lý connected joysticks</li>
+                <li><strong>Joystick</strong>: SDL-based joystick input</li>
+                <li>Axis mapping: Roll, Pitch, Yaw, Throttle</li>
+                <li>Button mapping: Flight modes, camera trigger, gimbal</li>
+                <li>Deadzone và exponential curve configuration</li>
+                <li>Calibration wizard</li>
+            </ul>
+        </div>
+
+        <h2>Module Interaction Summary</h2>
+        <div class="code-block">
+┌─────────────────────────────────────────────────────────────┐
+│                     <span class="type">QGCApplication</span>                          │
+│                     (Application Root)                       │
+└──┬──────────┬───────────┬──────────┬───────────┬───────────┘
+   │          │           │          │           │
+   ▼          ▼           ▼          ▼           ▼
+<span class="type">MultiVehicle</span> <span class="type">Link</span>    <span class="type">Settings</span>  <span class="type">MAVLink</span>    <span class="type">QGCCore</span>
+<span class="type">Manager</span>      <span class="type">Manager</span>  <span class="type">Manager</span>   <span class="type">Protocol</span>   <span class="type">Plugin</span>
+   │          │           │          │           │
+   │     ┌────┘           │          │           │
+   ▼     ▼               ▼          ▼           │
+<span class="type">Vehicle</span>──┬─<span class="type">Link</span>s    <span class="type">Settings</span>  <span class="type">Message</span>    │
+   │     │         (Fact-based)  Routing     │
+   │     │                                    │
+   ├── <span class="type">ParameterManager</span> ← Facts from vehicle  │
+   ├── <span class="type">MissionManager</span>   ← Mission items        │
+   ├── <span class="type">FirmwarePlugin</span>   ← PX4/APM behavior     │
+   ├── <span class="type">CameraManager</span>    ← Camera control        │
+   ├── <span class="type">GimbalController</span> ← Gimbal control        │
+   └── <span class="type">FactGroups[]</span>     ← Telemetry data        │
+                                                  │
+   QML UI ──────────────────────────────────── via Q_PROPERTY
+        </div>
+    </div>
+
+    <footer>
+        <p>QGroundControl Core Modules Documentation</p>
+    </footer>
+</body>
+</html>

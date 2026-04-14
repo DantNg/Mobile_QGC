@@ -165,7 +165,7 @@ if(NOT Qt6_FOUND)
 endif()
 
 find_package(Qt6
-    ${QGC_QT_MINIMUM_VERSION}...${QGC_QT_MAXIMUM_VERSION}
+    ${6.10.3}
     REQUIRED
     COMPONENTS
         Charts
